@@ -15,24 +15,38 @@ class Hit:
 
 
 class DenseRetriever:
+    """Dense index with reusable clean-corpus embeddings and optional per-query extra documents."""
+
     def __init__(self, documents: list[dict[str, Any]], model_name: str):
-        self.documents = documents
+        self.documents = list(documents)
         self.model = SentenceTransformer(model_name)
-        texts = [d["text"] for d in documents]
-        self.embeddings = self.model.encode(
+        self.embeddings = self._encode([d["text"] for d in self.documents])
+
+    def _encode(self, texts: list[str]) -> np.ndarray:
+        return self.model.encode(
             texts,
             normalize_embeddings=True,
             convert_to_numpy=True,
             show_progress_bar=False,
         )
 
-    def search(self, query: str, k: int) -> list[Hit]:
-        q = self.model.encode(
-            [query], normalize_embeddings=True, convert_to_numpy=True, show_progress_bar=False
-        )[0]
-        scores = np.dot(self.embeddings, q)
+    def search(
+        self,
+        query: str,
+        k: int,
+        extra_documents: list[dict[str, Any]] | None = None,
+    ) -> list[Hit]:
+        extra_documents = extra_documents or []
+        q = self._encode([query])[0]
+        documents = self.documents
+        embeddings = self.embeddings
+        if extra_documents:
+            extra_embeddings = self._encode([d["text"] for d in extra_documents])
+            documents = self.documents + extra_documents
+            embeddings = np.concatenate([self.embeddings, extra_embeddings], axis=0)
+        scores = np.dot(embeddings, q)
         order = np.argsort(-scores)[:k]
         return [
-            Hit(rank=i + 1, score=float(scores[idx]), document=self.documents[int(idx)])
+            Hit(rank=i + 1, score=float(scores[idx]), document=documents[int(idx)])
             for i, idx in enumerate(order)
         ]
