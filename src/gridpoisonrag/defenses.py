@@ -36,21 +36,28 @@ def validate_against_record(
     item: dict[str, Any],
     answer_text: str,
     covered: bool,
+    record_value: float | None = None,
 ) -> DefenseDecision:
+    """D3 validation against an independent structured record.
+
+    record_value deliberately need not equal the benchmark label. This lets the study measure
+    false flags when a simplified system of record omits legitimate jurisdictional variants.
+    """
     if not covered:
         return DefenseDecision(answer_text, False, "record_not_covered")
     value, _ = parse_committed_value(answer_text)
     if value is None:
         return DefenseDecision(answer_text, False, "no_numeric_commitment")
-    truth = item["value"]
+    if record_value is None:
+        record_value = item["value"]
     tol = float(item.get("tolerance", 0.0))
-    if not isinstance(truth, (int, float)):
+    if not isinstance(record_value, (int, float)):
         return DefenseDecision(answer_text, False, "non_numeric_record")
-    if abs(value - float(truth)) <= tol:
+    if abs(value - float(record_value)) <= tol:
         return DefenseDecision(answer_text, False, "record_match")
     replacement = (
         "VALUE: UNKNOWN\n"
-        f"RATIONALE: The committed value does not match the authoritative system-of-record "
-        f"value for {item['item_id']}; verification is required."
+        f"RATIONALE: The committed value does not match the covered system-of-record entry "
+        f"for {item['item_id']}; verification is required."
     )
     return DefenseDecision(replacement, True, "record_mismatch")
