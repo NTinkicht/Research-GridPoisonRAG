@@ -18,8 +18,8 @@ from gridpoisonrag.retrieval import DenseRetriever  # noqa: E402
 
 def select_poison(poison_docs, item_id, variant, count):
     docs = [d for d in poison_docs if d["item_id"] == item_id]
-    if count == 3 and variant == "unsafe_plain":
-        wanted = {"unsafe_plain", "unsafe_paraphrase_2", "unsafe_paraphrase_3"}
+    if count == 3 and variant == "out_of_range_plain":
+        wanted = {"out_of_range_plain", "out_of_range_paraphrase_2", "out_of_range_paraphrase_3"}
         return [d for d in docs if d["variant"] in wanted][:3]
     return [d for d in docs if d["variant"] == variant][:count]
 
@@ -29,7 +29,7 @@ def main() -> None:
     p.add_argument("--condition", choices=["B0", "B1", "B2", "D1", "D2"], required=True)
     p.add_argument("--model", required=True)
     p.add_argument("--k", type=int, default=5)
-    p.add_argument("--variant", default="unsafe_plain")
+    p.add_argument("--variant", default="out_of_range_plain")
     p.add_argument("--poison-count", type=int, default=1)
     p.add_argument("--tier", choices=["1", "2", "3", "12", "all"], default="12")
     p.add_argument("--limit", type=int)
