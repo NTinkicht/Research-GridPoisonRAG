@@ -1,0 +1,79 @@
+{
+  "runs": [
+    {
+      "file": "results/stage_a_plain_1.jsonl",
+      "n": 160,
+      "tier_1": {
+        "n": 70,
+        "poison_at_1": 0.014285714285714285,
+        "poison_at_10": 0.08571428571428572,
+        "poison_at_2": 0.04285714285714286,
+        "poison_at_5": 0.07142857142857142
+      },
+      "tier_2": {
+        "n": 90,
+        "poison_at_1": 0.011111111111111112,
+        "poison_at_10": 0.43333333333333335,
+        "poison_at_2": 0.05555555555555555,
+        "poison_at_5": 0.07777777777777778
+      },
+      "tier_all": {
+        "n": 160,
+        "poison_at_1": 0.0125,
+        "poison_at_10": 0.28125,
+        "poison_at_2": 0.05,
+        "poison_at_5": 0.075
+      }
+    },
+    {
+      "file": "results/stage_a_plain_3.jsonl",
+      "n": 160,
+      "tier_1": {
+        "n": 70,
+        "poison_at_1": 0.014285714285714285,
+        "poison_at_10": 0.11428571428571428,
+        "poison_at_2": 0.04285714285714286,
+        "poison_at_5": 0.1
+      },
+      "tier_2": {
+        "n": 90,
+        "poison_at_1": 0.011111111111111112,
+        "poison_at_10": 0.5,
+        "poison_at_2": 0.05555555555555555,
+        "poison_at_5": 0.08888888888888889
+      },
+      "tier_all": {
+        "n": 160,
+        "poison_at_1": 0.0125,
+        "poison_at_10": 0.33125,
+        "poison_at_2": 0.05,
+        "poison_at_5": 0.09375
+      }
+    },
+    {
+      "file": "results/stage_a_bulletin_1.jsonl",
+      "n": 160,
+      "tier_1": {
+        "n": 70,
+        "poison_at_1": 0.0,
+        "poison_at_10": 0.15714285714285714,
+        "poison_at_2": 0.04285714285714286,
+        "poison_at_5": 0.1
+      },
+      "tier_2": {
+        "n": 90,
+        "poison_at_1": 0.3888888888888889,
+        "poison_at_10": 0.8222222222222222,
+        "poison_at_2": 0.4666666666666667,
+        "poison_at_5": 0.5333333333333333
+      },
+      "tier_all": {
+        "n": 160,
+        "poison_at_1": 0.21875,
+        "poison_at_10": 0.53125,
+        "poison_at_2": 0.28125,
+        "poison_at_5": 0.34375
+      }
+    }
+  ]
+}
