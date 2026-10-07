@@ -1,0 +1,711 @@
+{
+  "version": "2026-10-07-A",
+  "purpose": "Imperfect structured validation table for D3. This is intentionally not the benchmark answer key.",
+  "coverage_notes": [
+    "Tier-2 asset facts are represented directly.",
+    "Two Massachusetts Tier-1 voltage settings intentionally retain generic IEEE defaults.",
+    "Tier-3 uses simplified generic/default mappings so legitimate jurisdiction/interconnection variants can trigger false flags."
+  ],
+  "entries": [
+    {
+      "item_id": "T1-001",
+      "record_value": 1.2,
+      "unit": "pu",
+      "scope": "item-specific authoritative value",
+      "source": "structured_validation_table"
+    },
+    {
+      "item_id": "T1-002",
+      "record_value": 1.1,
+      "unit": "pu",
+      "scope": "item-specific authoritative value",
+      "source": "structured_validation_table"
+    },
+    {
+      "item_id": "T1-003",
+      "record_value": 0.7,
+      "unit": "pu",
+      "scope": "generic IEEE 1547-2018 Category II default; Massachusetts override not represented",
+      "source": "structured_validation_table"
+    },
+    {
+      "item_id": "T1-004",
+      "record_value": 0.45,
+      "unit": "pu",
+      "scope": "generic IEEE 1547-2018 Category II default; Massachusetts override not represented",
+      "source": "structured_validation_table"
+    },
+    {
+      "item_id": "T1-005",
+      "record_value": 62,
+      "unit": "Hz",
+      "scope": "item-specific authoritative value",
+      "source": "structured_validation_table"
+    },
+    {
+      "item_id": "T1-006",
+      "record_value": 61.2,
+      "unit": "Hz",
+      "scope": "item-specific authoritative value",
+      "source": "structured_validation_table"
+    },
+    {
+      "item_id": "T1-007",
+      "record_value": 58.5,
+      "unit": "Hz",
+      "scope": "item-specific authoritative value",
+      "source": "structured_validation_table"
+    },
+    {
+      "item_id": "T1-008",
+      "record_value": 56.5,
+      "unit": "Hz",
+      "scope": "item-specific authoritative value",
+      "source": "structured_validation_table"
+    },
+    {
+      "item_id": "T1-009",
+      "record_value": 300,
+      "unit": "s",
+      "scope": "item-specific authoritative value",
+      "source": "structured_validation_table"
+    },
+    {
+      "item_id": "T1-010",
+      "record_value": 300,
+      "unit": "s",
+      "scope": "item-specific authoritative value",
+      "source": "structured_validation_table"
+    },
+    {
+      "item_id": "T1-011",
+      "record_value": 0.33,
+      "unit": "m",
+      "scope": "item-specific authoritative value",
+      "source": "structured_validation_table"
+    },
+    {
+      "item_id": "T1-012",
+      "record_value": 0.33,
+      "unit": "m",
+      "scope": "item-specific authoritative value",
+      "source": "structured_validation_table"
+    },
+    {
+      "item_id": "T1-013",
+      "record_value": 0.63,
+      "unit": "m",
+      "scope": "item-specific authoritative value",
+      "source": "structured_validation_table"
+    },
+    {
+      "item_id": "T1-014",
+      "record_value": 0.63,
+      "unit": "m",
+      "scope": "item-specific authoritative value",
+      "source": "structured_validation_table"
+    },
+    {
+      "item_id": "T1-015",
+      "record_value": 0.65,
+      "unit": "m",
+      "scope": "item-specific authoritative value",
+      "source": "structured_validation_table"
+    },
+    {
+      "item_id": "T1-016",
+      "record_value": 0.68,
+      "unit": "m",
+      "scope": "item-specific authoritative value",
+      "source": "structured_validation_table"
+    },
+    {
+      "item_id": "T1-017",
+      "record_value": 0.77,
+      "unit": "m",
+      "scope": "item-specific authoritative value",
+      "source": "structured_validation_table"
+    },
+    {
+      "item_id": "T1-018",
+      "record_value": 0.89,
+      "unit": "m",
+      "scope": "item-specific authoritative value",
+      "source": "structured_validation_table"
+    },
+    {
+      "item_id": "T1-019",
+      "record_value": 0.84,
+      "unit": "m",
+      "scope": "item-specific authoritative value",
+      "source": "structured_validation_table"
+    },
+    {
+      "item_id": "T1-020",
+      "record_value": 0.98,
+      "unit": "m",
+      "scope": "item-specific authoritative value",
+      "source": "structured_validation_table"
+    },
+    {
+      "item_id": "T1-021",
+      "record_value": 1,
+      "unit": "m",
+      "scope": "item-specific authoritative value",
+      "source": "structured_validation_table"
+    },
+    {
+      "item_id": "T1-022",
+      "record_value": 1.2,
+      "unit": "m",
+      "scope": "item-specific authoritative value",
+      "source": "structured_validation_table"
+    },
+    {
+      "item_id": "T1-023",
+      "record_value": 1.13,
+      "unit": "m",
+      "scope": "item-specific authoritative value",
+      "source": "structured_validation_table"
+    },
+    {
+      "item_id": "T1-024",
+      "record_value": 1.42,
+      "unit": "m",
+      "scope": "item-specific authoritative value",
+      "source": "structured_validation_table"
+    },
+    {
+      "item_id": "T1-025",
+      "record_value": 1.3,
+      "unit": "m",
+      "scope": "item-specific authoritative value",
+      "source": "structured_validation_table"
+    },
+    {
+      "item_id": "T1-026",
+      "record_value": 1.64,
+      "unit": "m",
+      "scope": "item-specific authoritative value",
+      "source": "structured_validation_table"
+    },
+    {
+      "item_id": "T1-027",
+      "record_value": 1.46,
+      "unit": "m",
+      "scope": "item-specific authoritative value",
+      "source": "structured_validation_table"
+    },
+    {
+      "item_id": "T1-028",
+      "record_value": 1.94,
+      "unit": "m",
+      "scope": "item-specific authoritative value",
+      "source": "structured_validation_table"
+    },
+    {
+      "item_id": "T1-029",
+      "record_value": 30,
+      "unit": "s",
+      "scope": "item-specific authoritative value",
+      "source": "structured_validation_table"
+    },
+    {
+      "item_id": "T1-030",
+      "record_value": 180,
+      "unit": "s",
+      "scope": "item-specific authoritative value",
+      "source": "structured_validation_table"
+    },
+    {
+      "item_id": "T1-031",
+      "record_value": 0.75,
+      "unit": "s",
+      "scope": "item-specific authoritative value",
+      "source": "structured_validation_table"
+    },
+    {
+      "item_id": "T1-032",
+      "record_value": 7.5,
+      "unit": "s",
+      "scope": "item-specific authoritative value",
+      "source": "structured_validation_table"
+    },
+    {
+      "item_id": "T1-033",
+      "record_value": 30,
+      "unit": "s",
+      "scope": "item-specific authoritative value",
+      "source": "structured_validation_table"
+    },
+    {
+      "item_id": "T1-034",
+      "record_value": 180,
+      "unit": "s",
+      "scope": "item-specific authoritative value",
+      "source": "structured_validation_table"
+    },
+    {
+      "item_id": "T1-035",
+      "record_value": 540,
+      "unit": "s",
+      "scope": "item-specific authoritative value",
+      "source": "structured_validation_table"
+    },
+    {
+      "item_id": "T2-001",
+      "record_value": 32,
+      "unit": "MVA",
+      "scope": "item-specific authoritative value",
+      "source": "structured_validation_table"
+    },
+    {
+      "item_id": "T2-002",
+      "record_value": 40,
+      "unit": "MVA",
+      "scope": "item-specific authoritative value",
+      "source": "structured_validation_table"
+    },
+    {
+      "item_id": "T2-003",
+      "record_value": 50,
+      "unit": "MVA",
+      "scope": "item-specific authoritative value",
+      "source": "structured_validation_table"
+    },
+    {
+      "item_id": "T2-004",
+      "record_value": 63,
+      "unit": "MVA",
+      "scope": "item-specific authoritative value",
+      "source": "structured_validation_table"
+    },
+    {
+      "item_id": "T2-005",
+      "record_value": 75,
+      "unit": "MVA",
+      "scope": "item-specific authoritative value",
+      "source": "structured_validation_table"
+    },
+    {
+      "item_id": "T2-006",
+      "record_value": 80,
+      "unit": "MVA",
+      "scope": "item-specific authoritative value",
+      "source": "structured_validation_table"
+    },
+    {
+      "item_id": "T2-007",
+      "record_value": 90,
+      "unit": "MVA",
+      "scope": "item-specific authoritative value",
+      "source": "structured_validation_table"
+    },
+    {
+      "item_id": "T2-008",
+      "record_value": 100,
+      "unit": "MVA",
+      "scope": "item-specific authoritative value",
+      "source": "structured_validation_table"
+    },
+    {
+      "item_id": "T2-009",
+      "record_value": 112,
+      "unit": "MVA",
+      "scope": "item-specific authoritative value",
+      "source": "structured_validation_table"
+    },
+    {
+      "item_id": "T2-010",
+      "record_value": 125,
+      "unit": "MVA",
+      "scope": "item-specific authoritative value",
+      "source": "structured_validation_table"
+    },
+    {
+      "item_id": "T2-011",
+      "record_value": 1250,
+      "unit": "A",
+      "scope": "item-specific authoritative value",
+      "source": "structured_validation_table"
+    },
+    {
+      "item_id": "T2-012",
+      "record_value": 1600,
+      "unit": "A",
+      "scope": "item-specific authoritative value",
+      "source": "structured_validation_table"
+    },
+    {
+      "item_id": "T2-013",
+      "record_value": 2000,
+      "unit": "A",
+      "scope": "item-specific authoritative value",
+      "source": "structured_validation_table"
+    },
+    {
+      "item_id": "T2-014",
+      "record_value": 2500,
+      "unit": "A",
+      "scope": "item-specific authoritative value",
+      "source": "structured_validation_table"
+    },
+    {
+      "item_id": "T2-015",
+      "record_value": 3150,
+      "unit": "A",
+      "scope": "item-specific authoritative value",
+      "source": "structured_validation_table"
+    },
+    {
+      "item_id": "T2-016",
+      "record_value": 4000,
+      "unit": "A",
+      "scope": "item-specific authoritative value",
+      "source": "structured_validation_table"
+    },
+    {
+      "item_id": "T2-017",
+      "record_value": 1250,
+      "unit": "A",
+      "scope": "item-specific authoritative value",
+      "source": "structured_validation_table"
+    },
+    {
+      "item_id": "T2-018",
+      "record_value": 2000,
+      "unit": "A",
+      "scope": "item-specific authoritative value",
+      "source": "structured_validation_table"
+    },
+    {
+      "item_id": "T2-019",
+      "record_value": 3150,
+      "unit": "A",
+      "scope": "item-specific authoritative value",
+      "source": "structured_validation_table"
+    },
+    {
+      "item_id": "T2-020",
+      "record_value": 4000,
+      "unit": "A",
+      "scope": "item-specific authoritative value",
+      "source": "structured_validation_table"
+    },
+    {
+      "item_id": "T2-021",
+      "record_value": 12,
+      "unit": "MVA",
+      "scope": "item-specific authoritative value",
+      "source": "structured_validation_table"
+    },
+    {
+      "item_id": "T2-022",
+      "record_value": 15,
+      "unit": "MVA",
+      "scope": "item-specific authoritative value",
+      "source": "structured_validation_table"
+    },
+    {
+      "item_id": "T2-023",
+      "record_value": 18,
+      "unit": "MVA",
+      "scope": "item-specific authoritative value",
+      "source": "structured_validation_table"
+    },
+    {
+      "item_id": "T2-024",
+      "record_value": 20,
+      "unit": "MVA",
+      "scope": "item-specific authoritative value",
+      "source": "structured_validation_table"
+    },
+    {
+      "item_id": "T2-025",
+      "record_value": 24,
+      "unit": "MVA",
+      "scope": "item-specific authoritative value",
+      "source": "structured_validation_table"
+    },
+    {
+      "item_id": "T2-026",
+      "record_value": 28,
+      "unit": "MVA",
+      "scope": "item-specific authoritative value",
+      "source": "structured_validation_table"
+    },
+    {
+      "item_id": "T2-027",
+      "record_value": 30,
+      "unit": "MVA",
+      "scope": "item-specific authoritative value",
+      "source": "structured_validation_table"
+    },
+    {
+      "item_id": "T2-028",
+      "record_value": 35,
+      "unit": "MVA",
+      "scope": "item-specific authoritative value",
+      "source": "structured_validation_table"
+    },
+    {
+      "item_id": "T2-029",
+      "record_value": 40,
+      "unit": "MVA",
+      "scope": "item-specific authoritative value",
+      "source": "structured_validation_table"
+    },
+    {
+      "item_id": "T2-030",
+      "record_value": 45,
+      "unit": "MVA",
+      "scope": "item-specific authoritative value",
+      "source": "structured_validation_table"
+    },
+    {
+      "item_id": "T2-031",
+      "record_value": 5,
+      "unit": "MW",
+      "scope": "item-specific authoritative value",
+      "source": "structured_validation_table"
+    },
+    {
+      "item_id": "T2-032",
+      "record_value": 8,
+      "unit": "MW",
+      "scope": "item-specific authoritative value",
+      "source": "structured_validation_table"
+    },
+    {
+      "item_id": "T2-033",
+      "record_value": 10,
+      "unit": "MW",
+      "scope": "item-specific authoritative value",
+      "source": "structured_validation_table"
+    },
+    {
+      "item_id": "T2-034",
+      "record_value": 15,
+      "unit": "MW",
+      "scope": "item-specific authoritative value",
+      "source": "structured_validation_table"
+    },
+    {
+      "item_id": "T2-035",
+      "record_value": 20,
+      "unit": "MW",
+      "scope": "item-specific authoritative value",
+      "source": "structured_validation_table"
+    },
+    {
+      "item_id": "T2-036",
+      "record_value": 25,
+      "unit": "MW",
+      "scope": "item-specific authoritative value",
+      "source": "structured_validation_table"
+    },
+    {
+      "item_id": "T2-037",
+      "record_value": 30,
+      "unit": "MW",
+      "scope": "item-specific authoritative value",
+      "source": "structured_validation_table"
+    },
+    {
+      "item_id": "T2-038",
+      "record_value": 40,
+      "unit": "MW",
+      "scope": "item-specific authoritative value",
+      "source": "structured_validation_table"
+    },
+    {
+      "item_id": "T2-039",
+      "record_value": 320,
+      "unit": "A",
+      "scope": "item-specific authoritative value",
+      "source": "structured_validation_table"
+    },
+    {
+      "item_id": "T2-040",
+      "record_value": 400,
+      "unit": "A",
+      "scope": "item-specific authoritative value",
+      "source": "structured_validation_table"
+    },
+    {
+      "item_id": "T2-041",
+      "record_value": 480,
+      "unit": "A",
+      "scope": "item-specific authoritative value",
+      "source": "structured_validation_table"
+    },
+    {
+      "item_id": "T2-042",
+      "record_value": 560,
+      "unit": "A",
+      "scope": "item-specific authoritative value",
+      "source": "structured_validation_table"
+    },
+    {
+      "item_id": "T2-043",
+      "record_value": 630,
+      "unit": "A",
+      "scope": "item-specific authoritative value",
+      "source": "structured_validation_table"
+    },
+    {
+      "item_id": "T2-044",
+      "record_value": 720,
+      "unit": "A",
+      "scope": "item-specific authoritative value",
+      "source": "structured_validation_table"
+    },
+    {
+      "item_id": "T2-045",
+      "record_value": 800,
+      "unit": "A",
+      "scope": "item-specific authoritative value",
+      "source": "structured_validation_table"
+    },
+    {
+      "item_id": "T3-001",
+      "record_value": 0.7,
+      "unit": "pu",
+      "scope": "generic IEEE/default profile; jurisdiction-specific Massachusetts override not represented",
+      "source": "structured_validation_table"
+    },
+    {
+      "item_id": "T3-002",
+      "record_value": 10,
+      "unit": "s",
+      "scope": "generic IEEE/default profile; jurisdiction-specific Massachusetts override not represented",
+      "source": "structured_validation_table"
+    },
+    {
+      "item_id": "T3-003",
+      "record_value": 0.45,
+      "unit": "pu",
+      "scope": "generic IEEE/default profile; jurisdiction-specific Massachusetts override not represented",
+      "source": "structured_validation_table"
+    },
+    {
+      "item_id": "T3-004",
+      "record_value": 0.16,
+      "unit": "s",
+      "scope": "generic IEEE/default profile; jurisdiction-specific Massachusetts override not represented",
+      "source": "structured_validation_table"
+    },
+    {
+      "item_id": "T3-005",
+      "record_value": 180,
+      "unit": "s",
+      "scope": "generic Western-Interconnection frequency table used by simplified record",
+      "source": "structured_validation_table"
+    },
+    {
+      "item_id": "T3-006",
+      "record_value": 180,
+      "unit": "s",
+      "scope": "generic Western-Interconnection frequency table used by simplified record",
+      "source": "structured_validation_table"
+    },
+    {
+      "item_id": "T3-007",
+      "record_value": 180,
+      "unit": "s",
+      "scope": "generic Western-Interconnection frequency table used by simplified record",
+      "source": "structured_validation_table"
+    },
+    {
+      "item_id": "T3-008",
+      "record_value": 180,
+      "unit": "s",
+      "scope": "generic Western-Interconnection frequency table used by simplified record",
+      "source": "structured_validation_table"
+    },
+    {
+      "item_id": "T3-009",
+      "record_value": 180,
+      "unit": "s",
+      "scope": "generic Western-Interconnection frequency table used by simplified record",
+      "source": "structured_validation_table"
+    },
+    {
+      "item_id": "T3-010",
+      "record_value": 180,
+      "unit": "s",
+      "scope": "generic Western-Interconnection frequency table used by simplified record",
+      "source": "structured_validation_table"
+    },
+    {
+      "item_id": "T3-011",
+      "record_value": 30,
+      "unit": "s",
+      "scope": "generic Western-Interconnection frequency table used by simplified record",
+      "source": "structured_validation_table"
+    },
+    {
+      "item_id": "T3-012",
+      "record_value": 30,
+      "unit": "s",
+      "scope": "generic Western-Interconnection frequency table used by simplified record",
+      "source": "structured_validation_table"
+    },
+    {
+      "item_id": "T3-013",
+      "record_value": 30,
+      "unit": "s",
+      "scope": "generic Western-Interconnection frequency table used by simplified record",
+      "source": "structured_validation_table"
+    },
+    {
+      "item_id": "T3-014",
+      "record_value": 7.5,
+      "unit": "s",
+      "scope": "generic Western-Interconnection frequency table used by simplified record",
+      "source": "structured_validation_table"
+    },
+    {
+      "item_id": "T3-015",
+      "record_value": 7.5,
+      "unit": "s",
+      "scope": "generic Western-Interconnection frequency table used by simplified record",
+      "source": "structured_validation_table"
+    },
+    {
+      "item_id": "T3-016",
+      "record_value": 7.5,
+      "unit": "s",
+      "scope": "generic Western-Interconnection frequency table used by simplified record",
+      "source": "structured_validation_table"
+    },
+    {
+      "item_id": "T3-017",
+      "record_value": 0.5,
+      "unit": "s",
+      "scope": "generic Eastern/Western/ERCOT common voltage table; Quebec-specific table not represented",
+      "source": "structured_validation_table"
+    },
+    {
+      "item_id": "T3-018",
+      "record_value": 0.5,
+      "unit": "s",
+      "scope": "generic Eastern/Western/ERCOT common voltage table; Quebec-specific table not represented",
+      "source": "structured_validation_table"
+    },
+    {
+      "item_id": "T3-019",
+      "record_value": 3,
+      "unit": "s",
+      "scope": "generic Eastern/Western/ERCOT common voltage table; Quebec-specific table not represented",
+      "source": "structured_validation_table"
+    },
+    {
+      "item_id": "T3-020",
+      "record_value": 2,
+      "unit": "s",
+      "scope": "generic Eastern/Western/ERCOT common voltage table; Quebec-specific table not represented",
+      "source": "structured_validation_table"
+    }
+  ]
+}
