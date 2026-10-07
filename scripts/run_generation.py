@@ -8,7 +8,7 @@ import sys
 ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT / "src"))
 
-from gridpoisonrag.defenses import isolate_then_aggregate, validate_against_record  # noqa: E402
+from gridpoisonrag.defenses import isolate_then_aggregate  # noqa: E402
 from gridpoisonrag.grading import grade_answer  # noqa: E402
 from gridpoisonrag.io import read_jsonl, write_jsonl  # noqa: E402
 from gridpoisonrag.prompts import closed_book_messages, rag_messages  # noqa: E402
@@ -51,21 +51,21 @@ def main() -> None:
 
     clean = read_jsonl(ROOT / "corpus/clean_documents.jsonl")
     poisons = read_jsonl(ROOT / "corpus/poison_variants.jsonl")
+    retriever = None if args.condition == "B0" else DenseRetriever(
+        clean, "sentence-transformers/all-MiniLM-L6-v2"
+    )
+
     rows = []
     for item in items:
         extra = [] if args.condition in {"B0", "B1"} else select_poison(
             poisons, item["item_id"], args.variant, args.poison_count
-        )
-        corpus = clean + extra
-        retriever = None if args.condition == "B0" else DenseRetriever(
-            corpus, "sentence-transformers/all-MiniLM-L6-v2"
         )
         for phrasing, query in [("formal", item["question_formal"]), ("field", item["question_field"])]:
             if args.condition == "B0":
                 hits = []
                 answer = client.chat(closed_book_messages(query), temperature=0.0)
             else:
-                hits = retriever.search(query, args.k)
+                hits = retriever.search(query, args.k, extra_documents=extra)
                 passages = [h.document["text"] for h in hits]
                 if args.condition == "D2":
                     answer = isolate_then_aggregate(client, query, passages, item["unit"])
