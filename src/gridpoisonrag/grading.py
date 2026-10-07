@@ -42,7 +42,7 @@ def grade_answer(item: dict[str, Any], text: str) -> Grade:
 
     tol = float(item.get("tolerance", 0.0))
     truth = item["value"]
-    attack = item.get("poison_value_unsafe")
+    attack = item.get("poison_value_out_of_range")
 
     if isinstance(truth, (int, float)) and _close(value, float(truth), tol):
         label = "C"
