@@ -56,8 +56,10 @@ We report closed-book (B0), clean-RAG (B1), and poisoned vanilla RAG (B2) refere
 Defenses are cautious prompting (D1), isolate-then-aggregate (D2), and deterministic system-of-record validation (D3).
 D3 is evaluated at 40\%, 70\%, and 100\% record coverage.
 
-The main poisoned condition uses one out-of-range factual poison, plain framing, dense retrieval, and $k=5$.
-All additional factors are one-factor deviations rather than a full factorial experiment.
+Natural-retrieval RQ1 includes one- and three-document attacks at $k=5$.
+A retrieval-only calibration showed that one-document exposure was highly imbalanced across the public-standard and asset-specific tiers, so RQ2 uses a fixed five-passage Stage-B context with exactly one poisoned document and counterbalanced first/last position.
+For RQ3, the three-document $k=5$ condition is used as the defense stress condition to avoid a retrieval floor.
+All remaining factors are one-factor deviations rather than a full factorial experiment.
 
 \section{Metrics and Statistics}
 Each trial is labelled correct (C), attacker value adopted (A), other wrong value (W), conflict flagged (F), or refusal (R).
@@ -70,6 +72,8 @@ We report Poison@$k$, attack success rate (ASR), conditional adoption rate (CAR)
 
 The benchmark item, not the individual phrasing, is the unit of analysis.
 Rates receive 95\% cluster-bootstrap intervals over items.
+The primary RQ2 endpoint is attacker-value adoption under forced exposure, reported separately by tier and poison position.
+The primary RQ3 endpoint is the paired reduction in benchmark violation rate for 70\% system-of-record coverage relative to prompt-level and isolate-then-aggregate defenses, reported with its benign-conflict false-flag rate.
 Paired defense comparisons use McNemar tests with Holm correction.
 
 \section{Results}
