@@ -1,7 +1,8 @@
 from __future__ import annotations
 
 import os
-from dataclasses import dataclass
+from dataclasses import dataclass, field
+from typing import Any
 
 import httpx
 from tenacity import retry, stop_after_attempt, wait_exponential
@@ -13,6 +14,8 @@ class OpenAICompatClient:
     api_key: str
     model: str
     timeout_s: float = 120.0
+    max_tokens: int = 256
+    last_metadata: dict[str, Any] = field(default_factory=dict, init=False)
 
     @classmethod
     def from_env(cls, prefix: str = "OPENAI_COMPAT") -> "OpenAICompatClient":
@@ -28,10 +31,11 @@ class OpenAICompatClient:
         temperature: float = 0.0,
         seed: int | None = None,
     ) -> str:
-        payload = {
+        payload: dict[str, Any] = {
             "model": self.model,
             "messages": messages,
             "temperature": temperature,
+            "max_tokens": self.max_tokens,
         }
         if seed is not None:
             payload["seed"] = seed
@@ -42,4 +46,12 @@ class OpenAICompatClient:
                 json=payload,
             )
             response.raise_for_status()
-            return response.json()["choices"][0]["message"]["content"]
+            body = response.json()
+            self.last_metadata = {
+                "response_id": body.get("id"),
+                "resolved_model": body.get("model"),
+                "provider": body.get("provider"),
+                "created": body.get("created"),
+                "usage": body.get("usage"),
+            }
+            return body["choices"][0]["message"]["content"]
