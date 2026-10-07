@@ -1,19 +1,40 @@
 models:
-  - id: small_open
-    provider: openai_compat
-    model_env: OPENAI_COMPAT_MODEL_SMALL
-    notes: "Set to a small/open model exposed through the configured OpenAI-compatible endpoint."
-  - id: mid_open
-    provider: openai_compat
-    model_env: OPENAI_COMPAT_MODEL_MID
-    notes: "Set to a mid-size/open model from a different family when possible."
-  - id: commercial
-    provider: openai_compat
-    model_env: OPENAI_COMPAT_MODEL_COMMERCIAL
-    notes: "Set to one strong hosted model."
+  - id: qwen3_8b
+    provider: openrouter
+    model: "qwen/qwen3-8b"
+    family: "Qwen"
+    role: "small open-weight"
+    parameters: "8.2B"
+    source_checked_utc: "2026-10-07"
+    notes: "Primary small-model point; log the exact OpenRouter provider/model metadata returned at run time."
+
+  - id: mistral_small_3_2_24b
+    provider: openrouter
+    model: "mistralai/mistral-small-3.2-24b-instruct"
+    family: "Mistral"
+    role: "mid-size open-weight"
+    parameters: "24B"
+    source_checked_utc: "2026-10-07"
+    notes: "Different model family from Qwen; instruction model."
+
+  - id: gpt_5_6_luna
+    provider: openrouter
+    model: "openai/gpt-5.6-luna"
+    family: "OpenAI"
+    role: "commercial hosted"
+    source_checked_utc: "2026-10-07"
+    notes: "Cost-efficient commercial comparison; do not substitute a different GPT-5.6 tier mid-run."
 
 generation:
   main_temperature: 0.0
   sensitivity_temperature: 0.7
   sensitivity_seeds: [11, 23, 47]
   timeout_s: 120
+  exact_model_ids_required: true
+  log_run_timestamp_utc: true
+  log_response_provider_metadata_when_available: true
+
+selection_rationale:
+  - "Three distinct model families."
+  - "One small open-weight model, one mid-size open-weight model, and one commercial hosted model."
+  - "All are currently exposed through an OpenAI-compatible OpenRouter endpoint."
