@@ -1,0 +1,19 @@
+models:
+  - id: small_open
+    provider: openai_compat
+    model_env: OPENAI_COMPAT_MODEL_SMALL
+    notes: "Set to a small/open model exposed through the configured OpenAI-compatible endpoint."
+  - id: mid_open
+    provider: openai_compat
+    model_env: OPENAI_COMPAT_MODEL_MID
+    notes: "Set to a mid-size/open model from a different family when possible."
+  - id: commercial
+    provider: openai_compat
+    model_env: OPENAI_COMPAT_MODEL_COMMERCIAL
+    notes: "Set to one strong hosted model."
+
+generation:
+  main_temperature: 0.0
+  sensitivity_temperature: 0.7
+  sensitivity_seeds: [11, 23, 47]
+  timeout_s: 120
