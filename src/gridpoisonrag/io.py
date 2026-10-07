@@ -25,4 +25,4 @@ def write_jsonl(path: str | Path, rows: Iterable[dict[str, Any]]) -> None:
     path.parent.mkdir(parents=True, exist_ok=True)
     with path.open("w", encoding="utf-8") as handle:
         for row in rows:
-            handle.write(json.dumps(row, ensure_ascii=False, sort_keys=True) + "\n")
+            handle.write(json.dumps(row, ensure_ascii=False, separators=(",", ":")) + "\n")
