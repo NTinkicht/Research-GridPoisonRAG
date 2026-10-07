@@ -109,6 +109,22 @@ def main():
             )
     report["primary_car"] = primary
 
+    # Tier-3 benign-conflict false-flag rate for D3 conditions.
+    bffr = {}
+    for model in sorted({r["model"] for r in rows}):
+        for condition in ["D3_40", "D3_70", "D3_100"]:
+            subset = [
+                r for r in rows
+                if r["model"] == model and r["tier"] == 3 and r["condition"] == condition
+            ]
+            if subset:
+                flagged = [
+                    bool(r.get("d3_flagged")) or r.get("label") in {"F", "R"}
+                    for r in subset
+                ]
+                bffr[f"{model}|{condition}"] = sum(flagged) / len(flagged)
+    report["bffr"] = bffr
+
     out = ROOT / args.out
     out.parent.mkdir(parents=True, exist_ok=True)
     out.write_text(json.dumps(report, indent=2, sort_keys=True) + "\n", encoding="utf-8")
