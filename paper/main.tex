@@ -1,0 +1,91 @@
+\documentclass[conference]{IEEEtran}
+\usepackage{booktabs}
+\usepackage{amsmath}
+\usepackage{graphicx}
+\usepackage{url}
+\usepackage[hidelinks]{hyperref}
+
+\title{Does the Assistant Check the Record? Knowledge-Base Poisoning and System-of-Record Validation in Utility Operations RAG}
+
+\author{\IEEEauthorblockN{Authors withheld in this working draft}}
+
+\begin{document}
+\maketitle
+
+\begin{abstract}
+Retrieval-augmented generation (RAG) is increasingly considered for document-grounded technical lookup, but indexed repositories can contain low-trust contributions.
+Prior work has established that knowledge-base poisoning can steer RAG answers.
+This work instead asks how such corruption translates into consequence-graded numeric integrity failures in utility-operations lookups, whether public-standard facts benefit more from parametric knowledge than asset-specific facts, and how much an independent system-of-record check can reduce out-of-range commitments under incomplete coverage.
+We introduce GridPoison-100, a benchmark of public-source, fictional asset-specific, and legitimate-conflict lookups, and decompose attack success into retrieval exposure and conditional adoption.
+Results will be inserted only after the frozen benchmark and preregistered analysis are complete.
+\end{abstract}
+
+\begin{IEEEkeywords}
+retrieval-augmented generation, knowledge-base poisoning, power systems, utility operations, large language models, data integrity
+\end{IEEEkeywords}
+
+\section{Introduction}
+Document-grounded language-model assistants can make technical information easier to retrieve, but retrieval introduces a distinct integrity dependency: a legitimate user can receive a false value when low-trust content enters an indexed repository.
+The attack itself is not new.
+Our focus is the operational consequence of adoption, the role of parametric prior knowledge, and validation against an independent structured record.
+
+We study three research questions:
+\textbf{RQ1}: How does targeted knowledge-base poisoning split into retrieval exposure and conditional adoption?
+\textbf{RQ2}: Does parametric knowledge protect public-standard facts more than asset-specific operational facts?
+\textbf{RQ3}: How much does system-of-record validation reduce out-of-range answers relative to prompt-level and isolate-then-aggregate defenses, and what false-flag cost does it introduce on legitimate conflicts?
+
+\section{Related Work}
+Knowledge-base poisoning of RAG systems is established by PoisonedRAG and subsequent work~\cite{zou2025poisonedrag,pereira2026influence}.
+RobustRAG provides an isolate-then-aggregate defense baseline~\cite{xiang2024robustrag}.
+ClashEval studies conflict between model priors and retrieved evidence~\cite{wu2024clasheval}, while evidence framing and metadata effects have also been studied~\cite{wan2024evidence,chiang2024metadata}.
+Power-system LLM security has already been discussed and validated in prior work~\cite{ruan2024power,li2024smartgridrisk}; therefore we make no claim of being the first LLM-security study in this domain.
+
+\section{Threat Model}
+The attacker is an authorized but low-trust writer, or the sender of a spoofed bulletin, who can add one to three new documents to an indexed repository.
+The attacker cannot edit or delete existing documents and cannot alter the utility's system of record, EMS/SCADA, or model weights.
+The attacker knows the target asset or topic but not the exact query wording, retriever, embedding model, or remaining corpus.
+The goal is targeted answer-integrity corruption in a legitimate lookup.
+
+\section{GridPoison-100}
+The benchmark contains 35 public-source normative items, 45 asset-specific items from a declared fictional utility register, and 20 legitimate-conflict items.
+Every item records a committed target value, unit, applicability conditions, source or record locator, allowable interval where defined, and two query phrasings.
+The corpus contains 400 short clean support/distractor documents and controlled poison variants.
+
+\section{Experimental Design}
+We report closed-book (B0), clean-RAG (B1), and poisoned vanilla RAG (B2) reference conditions.
+Defenses are cautious prompting (D1), isolate-then-aggregate (D2), and deterministic system-of-record validation (D3).
+D3 is evaluated at 40\%, 70\%, and 100\% record coverage.
+
+The main poisoned condition uses one out-of-range factual poison, plain framing, dense retrieval, and $k=5$.
+All additional factors are one-factor deviations rather than a full factorial experiment.
+
+\section{Metrics and Statistics}
+Each trial is labelled correct (C), attacker value adopted (A), other wrong value (W), conflict flagged (F), or refusal (R).
+Let $E_t$ denote whether poison is present in the retrieved top-$k$ context.
+We report Poison@$k$, attack success rate (ASR), conditional adoption rate (CAR), correct-response rate (CRR), conflict-flag rate (CFR), and the benchmark violation rate (SVR).
+
+\begin{equation}
+\mathrm{CAR} = P(A \mid E_t=1).
+\end{equation}
+
+The benchmark item, not the individual phrasing, is the unit of analysis.
+Rates receive 95\% cluster-bootstrap intervals over items.
+Paired defense comparisons use McNemar tests with Holm correction.
+
+\section{Results}
+\emph{Frozen results pending. No values are inserted before the benchmark review gate and final runs.}
+
+\section{Discussion}
+The discussion will separate retrieval compromise, generation compromise, and out-of-range commitments.
+It will report the coverage ceiling and legitimate-conflict false flags of D3 rather than describing it as a complete poisoning defense.
+
+\section{Limitations}
+The asset register is fictional, the study uses a limited model and retriever set, and no physical power-flow, protection, or thermal simulation is performed.
+The results therefore support benchmark-level answer-integrity claims only, not claims about physical grid safety or deployment resilience.
+
+\section{Conclusion}
+Conclusions will be restricted to the preregistered endpoints and measured benchmark results.
+
+\bibliographystyle{IEEEtran}
+\bibliography{references}
+\end{document}
