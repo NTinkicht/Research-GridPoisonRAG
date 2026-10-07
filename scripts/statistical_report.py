@@ -11,7 +11,12 @@ sys.path.insert(0, str(ROOT / "src"))
 
 from gridpoisonrag.io import read_jsonl  # noqa: E402
 from gridpoisonrag.metrics import cluster_bootstrap_rate  # noqa: E402
-from gridpoisonrag.stats import holm_adjust, mcnemar_exact, paired_items  # noqa: E402
+from gridpoisonrag.stats import (  # noqa: E402
+    holm_adjust,
+    mcnemar_exact,
+    paired_cluster_bootstrap_difference,
+    paired_items,
+)
 
 
 def rate(rows, fn):
@@ -36,9 +41,7 @@ def summarize_group(rows):
         "RR": rate(rows, lambda r: r["label"] == "R"),
         "SVR": rate(rows, lambda r: r.get("violation") is True),
         "PoisonAtK": rate(rows, lambda r: r.get("poison_exposed") is True),
-        "CAR": (
-            rate(exposed, lambda r: r["label"] == "A") if exposed else None
-        ),
+        "CAR": rate(exposed, lambda r: r["label"] == "A") if exposed else None,
     }
 
 
@@ -56,7 +59,15 @@ def main():
     for r in rows:
         groups[(r["condition"], r["model"], r["tier"])].append(r)
 
-    report = {"groups": {}, "intervals": {}, "mcnemar": []}
+    report = {
+        "groups": {},
+        "intervals": {},
+        "primary_rq2_stage_b": {},
+        "primary_rq3_delta_svr": {},
+        "bffr": {},
+        "mcnemar": [],
+    }
+
     for (condition, model, tier), group in sorted(groups.items()):
         key = f"{condition}|{model}|T{tier}"
         report["groups"][key] = summarize_group(group)
@@ -72,47 +83,65 @@ def main():
                     "point": point, "lo95": lo, "hi95": hi
                 }
 
-    # Defense-vs-B2 paired McNemar tests by model and tier on violation outcome.
-    tests = []
-    for model in sorted({r["model"] for r in rows}):
-        for tier in [1, 2]:
-            base = [r for r in rows if r["model"] == model and r["tier"] == tier and r["condition"] == "B2"]
-            if not base:
-                continue
-            for defense in ["D1", "D2", "D3_40", "D3_70", "D3_100"]:
-                dr = [r for r in rows if r["model"] == model and r["tier"] == tier and r["condition"] == defense]
-                if not dr:
+    models = sorted({r["model"] for r in rows})
+
+    # Primary RQ2: adoption under forced exposure, stratified by position and tier.
+    for model in models:
+        for condition in ["STAGE_B_FIRST", "STAGE_B_LAST"]:
+            for tier in [1, 2]:
+                subset = [
+                    r for r in rows
+                    if r["model"] == model and r["tier"] == tier and r["condition"] == condition
+                ]
+                if not subset:
                     continue
-                pairs = paired_items(base, dr, lambda r: r.get("violation") is True)
-                result = mcnemar_exact(pairs)
-                tests.append({
-                    "model": model, "tier": tier, "defense": defense,
-                    "b": result.b, "c": result.c, "p": result.p_value
-                })
+                vals = by_item_binary(subset, lambda r: r["label"] == "A")
+                point, lo, hi = cluster_bootstrap_rate(vals)
+                report["primary_rq2_stage_b"][f"{model}|{condition}|T{tier}"] = {
+                    "adoption": point, "lo95": lo, "hi95": hi, "n_items": len(vals)
+                }
+
+    # Primary RQ3: paired violation-rate reduction under the P3 stress condition.
+    defense_names = ["D1_P3", "D2_P3", "D3_P3_40", "D3_P3_70", "D3_P3_100"]
+    tests = []
+    for model in models:
+        base = [
+            r for r in rows
+            if r["model"] == model and r["tier"] in {1, 2}
+            and r["condition"] == "B2_P3_STRESS"
+        ]
+        if not base:
+            continue
+        for defense in defense_names:
+            dr = [
+                r for r in rows
+                if r["model"] == model and r["tier"] in {1, 2}
+                and r["condition"] == defense
+            ]
+            if not dr:
+                continue
+            point, lo, hi = paired_cluster_bootstrap_difference(
+                base, dr, lambda r: r.get("violation") is True
+            )
+            report["primary_rq3_delta_svr"][f"{model}|{defense}"] = {
+                "delta_svr": point, "lo95": lo, "hi95": hi
+            }
+            pairs = paired_items(base, dr, lambda r: r.get("violation") is True)
+            result = mcnemar_exact(pairs)
+            tests.append({
+                "model": model, "defense": defense,
+                "b": result.b, "c": result.c, "p": result.p_value
+            })
+
     if tests:
         adjusted = holm_adjust([x["p"] for x in tests])
         for x, adj in zip(tests, adjusted):
             x["p_holm"] = adj
         report["mcnemar"] = tests
 
-    # Primary RQ2 descriptive endpoint: CAR Tier 1 vs Tier 2 under B2.
-    primary = {}
-    for model in sorted({r["model"] for r in rows}):
-        for tier in [1, 2]:
-            subset = [
-                r for r in rows
-                if r["model"] == model and r["tier"] == tier
-                and r["condition"] == "B2" and r.get("poison_exposed")
-            ]
-            primary[f"{model}|T{tier}|CAR"] = (
-                rate(subset, lambda r: r["label"] == "A") if subset else None
-            )
-    report["primary_car"] = primary
-
-    # Tier-3 benign-conflict false-flag rate for D3 conditions.
-    bffr = {}
-    for model in sorted({r["model"] for r in rows}):
-        for condition in ["D3_40", "D3_70", "D3_100"]:
+    # D3 legitimate-conflict false-flag rate.
+    for model in models:
+        for condition in ["D3_CONFLICT_40", "D3_CONFLICT_70", "D3_CONFLICT_100"]:
             subset = [
                 r for r in rows
                 if r["model"] == model and r["tier"] == 3 and r["condition"] == condition
@@ -122,8 +151,11 @@ def main():
                     bool(r.get("d3_flagged")) or r.get("label") in {"F", "R"}
                     for r in subset
                 ]
-                bffr[f"{model}|{condition}"] = sum(flagged) / len(flagged)
-    report["bffr"] = bffr
+                report["bffr"][f"{model}|{condition}"] = {
+                    "rate": sum(flagged) / len(flagged),
+                    "n_trials": len(flagged),
+                    "n_items": len({r["item_id"] for r in subset}),
+                }
 
     out = ROOT / args.out
     out.parent.mkdir(parents=True, exist_ok=True)
