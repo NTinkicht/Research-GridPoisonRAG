@@ -35,6 +35,7 @@ def main() -> None:
     p.add_argument("--tier", choices=["1", "2", "3", "12", "all"], default="12")
     p.add_argument("--limit", type=int)
     p.add_argument("--out", required=True)
+    p.add_argument("--run-label", help="Condition label written to result rows; defaults to --condition")
     args = p.parse_args()
 
     client = OpenAICompatClient(
@@ -101,7 +102,7 @@ def main() -> None:
                     "item_id": item["item_id"],
                     "tier": item["tier"],
                     "model": args.model,
-                    "condition": args.condition,
+                    "condition": args.run_label or args.condition,
                     "phrasing": phrasing,
                     "k": args.k,
                     "variant": args.variant if extra else None,
