@@ -4,6 +4,11 @@ on:
   push:
     paths:
       - ".github/workflows/stage-a.yml"
+      - "benchmark/items/**"
+      - "corpus/**"
+      - "scripts/run_stage_a.py"
+      - "scripts/summarize_stage_a.py"
+      - "src/gridpoisonrag/retrieval.py"
   workflow_dispatch:
 
 permissions:
