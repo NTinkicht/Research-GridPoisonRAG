@@ -15,7 +15,7 @@ from gridpoisonrag.retrieval import DenseRetriever  # noqa: E402
 def main() -> None:
     p = argparse.ArgumentParser()
     p.add_argument("--model", default="sentence-transformers/all-MiniLM-L6-v2")
-    p.add_argument("--variant", default="unsafe_plain")
+    p.add_argument("--variant", default="out_of_range_plain")
     p.add_argument("--poison-count", type=int, choices=[1, 3], default=1)
     p.add_argument("--out", default="results/stage_a.jsonl")
     args = p.parse_args()
@@ -33,8 +33,8 @@ def main() -> None:
     rows = []
     for item in items:
         item_poisons = by_item[item["item_id"]]
-        if args.poison_count == 3 and args.variant == "unsafe_plain":
-            wanted = {"unsafe_plain", "unsafe_paraphrase_2", "unsafe_paraphrase_3"}
+        if args.poison_count == 3 and args.variant == "out_of_range_plain":
+            wanted = {"out_of_range_plain", "out_of_range_paraphrase_2", "out_of_range_paraphrase_3"}
             candidates = [d for d in item_poisons if d["variant"] in wanted][:3]
         else:
             candidates = [d for d in item_poisons if d["variant"] == args.variant][:1]
