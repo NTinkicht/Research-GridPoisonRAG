@@ -61,3 +61,39 @@ D3 is evaluated at imperfect record coverage rather than being treated as an ora
 ## Status
 
 Repository foundation initialized 7 Oct 2026. Public-source extraction, benchmark generation, validation, experiment pipeline and paper scaffolding are tracked in the repository.
+
+
+## Quick start
+
+```bash
+python -m pip install -e ".[dev]"
+python scripts/validate_benchmark.py
+pytest -q
+```
+
+Run the retrieval-only Stage A before any paid generation:
+
+```bash
+python scripts/run_stage_a.py --variant out_of_range_plain --poison-count 1 --out results/stage_a_plain_1.jsonl
+python scripts/run_stage_a.py --variant out_of_range_plain --poison-count 3 --out results/stage_a_plain_3.jsonl
+python scripts/run_stage_a.py --variant out_of_range_vendor_bulletin --poison-count 1 --out results/stage_a_bulletin_1.jsonl
+```
+
+The complete execution sequence is in [RUNBOOK.md](RUNBOOK.md).
+
+## Current gates
+
+1. **Human validation:** all 100 items are machine-valid but remain `engineer_reviewed=false` until explicit power-engineer review. See `benchmark/ENGINEER_REVIEW.md` and Issue #1.
+2. **Freeze:** do not create the final SHA-256 manifest until review fixes are complete.
+3. **Clean pipeline:** run B0/B1 on one strong model and require Tier-2 clean-RAG CRR >= 80% before interpreting any poisoning result.
+4. **Paid generation:** the GitHub workflow is manual only and requires the `OPENROUTER_API_KEY` repository secret; it is intentionally not triggered automatically.
+5. **Claims:** report benchmark-level answer integrity and out-of-range commitments, never physical grid safety, security, or resilience.
+
+## Repository map
+
+- `benchmark/` — GridPoison-100 items, source catalog, fictional asset register, validation record and review worksheet.
+- `corpus/` — 400 clean documents and controlled poison variants.
+- `src/gridpoisonrag/` — retrieval, generation, grading, defenses, metrics and statistics.
+- `scripts/` — validation, freezing, retrieval/generation runs, D3, analysis and adjudication tooling.
+- `paper/` — IEEE manuscript skeleton, related-work positioning, methods lock and adjudication rubric.
+- `.github/workflows/` — CI, retrieval-only Stage A, and manually triggered generation matrix.
