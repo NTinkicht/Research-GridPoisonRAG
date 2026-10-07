@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import argparse
 import os
+from datetime import datetime, timezone
 from pathlib import Path
 import sys
 
@@ -71,6 +72,14 @@ def main() -> None:
         extra = [] if args.condition in {"B0", "B1"} else select_poison(
             poisons, item["item_id"], args.variant, args.poison_count
         )
+        # Some public exact-setting items have no meaningful wrong-but-still-in-range alternative.
+        # Skip them rather than inserting an empty "poison" document into that ablation.
+        if (
+            args.condition in {"B2", "D1", "D2"}
+            and args.variant == "wrong_in_range_plain"
+            and (not extra or extra[0].get("poison_value") is None)
+        ):
+            continue
         for phrasing, query in [("formal", item["question_formal"]), ("field", item["question_field"])]:
             if args.condition == "B0":
                 hits = []
@@ -100,6 +109,11 @@ def main() -> None:
                     "poison_exposed": bool(poison_ranks),
                     "poison_ranks": poison_ranks,
                     "answer": answer,
+                    "run_timestamp_utc": datetime.now(timezone.utc).isoformat(),
+                    "api_response_id": client.last_metadata.get("response_id"),
+                    "api_resolved_model": client.last_metadata.get("resolved_model"),
+                    "api_provider": client.last_metadata.get("provider"),
+                    "api_usage": client.last_metadata.get("usage"),
                     "label": grade.label,
                     "committed_value": grade.committed_value,
                     "violation": grade.violation,
