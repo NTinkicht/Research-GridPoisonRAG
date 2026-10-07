@@ -24,6 +24,7 @@ def main() -> None:
     p.add_argument("--input", required=True)
     p.add_argument("--coverage", type=float, choices=[0.4, 0.7, 1.0], required=True)
     p.add_argument("--out", required=True)
+    p.add_argument("--run-label", help="Condition label; defaults to D3_<coverage percent>")
     args = p.parse_args()
 
     items = {
@@ -49,7 +50,7 @@ def main() -> None:
         rows.append(
             {
                 **row,
-                "condition": f"D3_{int(args.coverage*100)}",
+                "condition": args.run_label or f"D3_{int(args.coverage*100)}",
                 "d3_covered": is_covered,
                 "d3_record_value": record_value,
                 "d3_record_scope": record.get(item["item_id"], {}).get("scope"),
