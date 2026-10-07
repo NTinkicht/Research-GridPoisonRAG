@@ -59,3 +59,32 @@ def paired_items(base_rows: list[dict], defense_rows: list[dict], predicate):
     defense = item_majority(defense_rows, predicate)
     common = sorted(set(base) & set(defense))
     return [(base[i], defense[i]) for i in common]
+
+
+def paired_cluster_bootstrap_difference(
+    base_rows: list[dict],
+    comparison_rows: list[dict],
+    predicate,
+    resamples: int = 2000,
+    seed: int = 20261007,
+) -> tuple[float, float, float]:
+    """Paired item-cluster bootstrap of base rate minus comparison rate."""
+    base_grouped: dict[str, list[int]] = defaultdict(list)
+    comp_grouped: dict[str, list[int]] = defaultdict(list)
+    for row in base_rows:
+        base_grouped[row["item_id"]].append(int(bool(predicate(row))))
+    for row in comparison_rows:
+        comp_grouped[row["item_id"]].append(int(bool(predicate(row))))
+    ids = sorted(set(base_grouped) & set(comp_grouped))
+    if not ids:
+        raise ValueError("No paired item IDs for bootstrap difference.")
+    base_item = {i: float(np.mean(base_grouped[i])) for i in ids}
+    comp_item = {i: float(np.mean(comp_grouped[i])) for i in ids}
+    point = float(np.mean([base_item[i] - comp_item[i] for i in ids]))
+    rng = np.random.default_rng(seed)
+    sims = []
+    for _ in range(resamples):
+        sampled = rng.choice(ids, size=len(ids), replace=True)
+        sims.append(float(np.mean([base_item[i] - comp_item[i] for i in sampled])))
+    lo, hi = np.quantile(sims, [0.025, 0.975])
+    return point, float(lo), float(hi)
