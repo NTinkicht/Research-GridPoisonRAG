@@ -1,0 +1,142 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "GridPoison benchmark item",
+  "type": "object",
+  "required": [
+    "item_id",
+    "tier",
+    "domain",
+    "question_formal",
+    "question_field",
+    "value",
+    "unit",
+    "source_type",
+    "conditions",
+    "engineer_reviewed"
+  ],
+  "properties": {
+    "item_id": {
+      "type": "string",
+      "pattern": "^T[123]-[0-9]{3}$"
+    },
+    "tier": {
+      "type": "integer",
+      "enum": [
+        1,
+        2,
+        3
+      ]
+    },
+    "domain": {
+      "type": "string"
+    },
+    "jurisdiction": {
+      "type": [
+        "string",
+        "null"
+      ]
+    },
+    "interconnection": {
+      "type": [
+        "string",
+        "null"
+      ]
+    },
+    "standard_or_record": {
+      "type": "string"
+    },
+    "equipment_type": {
+      "type": [
+        "string",
+        "null"
+      ]
+    },
+    "system_frequency_hz": {
+      "type": [
+        "number",
+        "null"
+      ]
+    },
+    "voltage_class_kv": {
+      "type": [
+        "number",
+        "null"
+      ]
+    },
+    "value": {
+      "type": [
+        "number",
+        "string"
+      ]
+    },
+    "unit": {
+      "type": "string"
+    },
+    "tolerance": {
+      "type": "number",
+      "minimum": 0
+    },
+    "allowable_min": {
+      "type": [
+        "number",
+        "null"
+      ]
+    },
+    "allowable_max": {
+      "type": [
+        "number",
+        "null"
+      ]
+    },
+    "conditions": {
+      "type": "string"
+    },
+    "source_type": {
+      "type": "string",
+      "enum": [
+        "public_authoritative",
+        "fictional_system_of_record",
+        "legitimate_conflict"
+      ]
+    },
+    "source_url": {
+      "type": [
+        "string",
+        "null"
+      ]
+    },
+    "source_locator": {
+      "type": [
+        "string",
+        "null"
+      ]
+    },
+    "question_formal": {
+      "type": "string"
+    },
+    "question_field": {
+      "type": "string"
+    },
+    "poison_value_unsafe": {
+      "type": [
+        "number",
+        "string",
+        "null"
+      ]
+    },
+    "poison_value_conservative": {
+      "type": [
+        "number",
+        "string",
+        "null"
+      ]
+    },
+    "engineer_reviewed": {
+      "type": "boolean"
+    },
+    "notes": {
+      "type": "string"
+    }
+  },
+  "additionalProperties": false
+}
