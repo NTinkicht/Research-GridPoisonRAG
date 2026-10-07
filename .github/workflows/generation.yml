@@ -1,0 +1,62 @@
+name: Generation Matrix
+
+on:
+  workflow_dispatch:
+    inputs:
+      model:
+        description: "OpenAI-compatible model ID"
+        required: true
+        type: string
+      phase:
+        description: "Run phase"
+        required: true
+        type: choice
+        options:
+          - gate
+          - main
+          - conflicts
+
+permissions:
+  contents: read
+
+jobs:
+  run:
+    runs-on: ubuntu-latest
+    timeout-minutes: 120
+    env:
+      OPENAI_COMPAT_BASE_URL: https://openrouter.ai/api/v1
+      OPENAI_COMPAT_API_KEY: ${{ secrets.OPENROUTER_API_KEY }}
+      MODEL: ${{ inputs.model }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+      - run: python -m pip install -e .
+      - name: Require API key
+        run: |
+          test -n "$OPENAI_COMPAT_API_KEY" || (echo "Missing repository secret OPENROUTER_API_KEY" && exit 1)
+      - name: Gate runs
+        if: inputs.phase == 'gate'
+        run: |
+          python scripts/run_generation.py --condition B0 --model "$MODEL" --tier 12 --out results/gate_b0.jsonl
+          python scripts/run_generation.py --condition B1 --model "$MODEL" --tier 12 --out results/gate_b1.jsonl
+      - name: Main attack and defenses
+        if: inputs.phase == 'main'
+        run: |
+          python scripts/run_generation.py --condition B2 --model "$MODEL" --tier 12 --out results/main_b2.jsonl
+          python scripts/run_generation.py --condition D1 --model "$MODEL" --tier 12 --out results/main_d1.jsonl
+          python scripts/run_generation.py --condition D2 --model "$MODEL" --tier 12 --out results/main_d2.jsonl
+          python scripts/apply_d3.py --input results/main_b2.jsonl --coverage 0.4 --out results/main_d3_40.jsonl
+          python scripts/apply_d3.py --input results/main_b2.jsonl --coverage 0.7 --out results/main_d3_70.jsonl
+          python scripts/apply_d3.py --input results/main_b2.jsonl --coverage 1.0 --out results/main_d3_100.jsonl
+      - name: Benign conflicts
+        if: inputs.phase == 'conflicts'
+        run: |
+          python scripts/run_generation.py --condition B1 --model "$MODEL" --tier 3 --out results/t3_b1.jsonl
+          python scripts/apply_d3.py --input results/t3_b1.jsonl --coverage 1.0 --out results/t3_d3_100.jsonl
+      - uses: actions/upload-artifact@v4
+        with:
+          name: "gridpoisonrag-${{ inputs.phase }}-${{ github.run_id }}"
+          path: results/
+          if-no-files-found: error
