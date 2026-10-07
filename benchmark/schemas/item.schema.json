@@ -117,20 +117,6 @@
     "question_field": {
       "type": "string"
     },
-    "poison_value_unsafe": {
-      "type": [
-        "number",
-        "string",
-        "null"
-      ]
-    },
-    "poison_value_conservative": {
-      "type": [
-        "number",
-        "string",
-        "null"
-      ]
-    },
     "engineer_reviewed": {
       "type": "boolean"
     },
@@ -152,6 +138,20 @@
     },
     "conflict_alternative_source_url": {
       "type": [
+        "string",
+        "null"
+      ]
+    },
+    "poison_value_out_of_range": {
+      "type": [
+        "number",
+        "string",
+        "null"
+      ]
+    },
+    "poison_value_wrong_in_range": {
+      "type": [
+        "number",
         "string",
         "null"
       ]
