@@ -54,34 +54,34 @@ jobs:
       - name: Gate runs
         if: inputs.phase == 'gate'
         run: |
-          python scripts/run_generation.py --condition B0 --model "$MODEL" --tier 12 --out results/$MODEL_KEY/gate_b0.jsonl
-          python scripts/run_generation.py --condition B1 --model "$MODEL" --tier 12 --out results/$MODEL_KEY/gate_b1.jsonl
+          python scripts/run_generation.py --condition B0 --run-label B0 --model "$MODEL" --tier 12 --out results/$MODEL_KEY/gate_b0.jsonl
+          python scripts/run_generation.py --condition B1 --run-label B1 --model "$MODEL" --tier 12 --out results/$MODEL_KEY/gate_b1.jsonl
 
       - name: Main attack and defenses
         if: inputs.phase == 'main'
         run: |
-          python scripts/run_generation.py --condition B2 --model "$MODEL" --tier 12 --k 5 --variant out_of_range_plain --poison-count 1 --out results/$MODEL_KEY/main_b2.jsonl
-          python scripts/run_generation.py --condition D1 --model "$MODEL" --tier 12 --k 5 --variant out_of_range_plain --poison-count 1 --out results/$MODEL_KEY/main_d1.jsonl
-          python scripts/run_generation.py --condition D2 --model "$MODEL" --tier 12 --k 5 --variant out_of_range_plain --poison-count 1 --out results/$MODEL_KEY/main_d2.jsonl
-          python scripts/apply_d3.py --input results/$MODEL_KEY/main_b2.jsonl --coverage 0.4 --out results/$MODEL_KEY/main_d3_40.jsonl
-          python scripts/apply_d3.py --input results/$MODEL_KEY/main_b2.jsonl --coverage 0.7 --out results/$MODEL_KEY/main_d3_70.jsonl
-          python scripts/apply_d3.py --input results/$MODEL_KEY/main_b2.jsonl --coverage 1.0 --out results/$MODEL_KEY/main_d3_100.jsonl
+          python scripts/run_generation.py --condition B2 --run-label B2_P1 --model "$MODEL" --tier 12 --k 5 --variant out_of_range_plain --poison-count 1 --out results/$MODEL_KEY/main_b2_p1.jsonl
+          python scripts/run_generation.py --condition B2 --run-label B2_P3_STRESS --model "$MODEL" --tier 12 --k 5 --variant out_of_range_plain --poison-count 3 --out results/$MODEL_KEY/main_b2_p3.jsonl
+          python scripts/run_generation.py --condition D1 --run-label D1_P3 --model "$MODEL" --tier 12 --k 5 --variant out_of_range_plain --poison-count 3 --out results/$MODEL_KEY/main_d1_p3.jsonl
+          python scripts/run_generation.py --condition D2 --run-label D2_P3 --model "$MODEL" --tier 12 --k 5 --variant out_of_range_plain --poison-count 3 --out results/$MODEL_KEY/main_d2_p3.jsonl
+          python scripts/apply_d3.py --input results/$MODEL_KEY/main_b2_p3.jsonl --coverage 0.4 --run-label D3_P3_40 --out results/$MODEL_KEY/main_d3_p3_40.jsonl
+          python scripts/apply_d3.py --input results/$MODEL_KEY/main_b2_p3.jsonl --coverage 0.7 --run-label D3_P3_70 --out results/$MODEL_KEY/main_d3_p3_70.jsonl
+          python scripts/apply_d3.py --input results/$MODEL_KEY/main_b2_p3.jsonl --coverage 1.0 --run-label D3_P3_100 --out results/$MODEL_KEY/main_d3_p3_100.jsonl
 
       - name: Benign conflicts
         if: inputs.phase == 'conflicts'
         run: |
-          python scripts/run_generation.py --condition B1 --model "$MODEL" --tier 3 --out results/$MODEL_KEY/t3_b1.jsonl
-          python scripts/apply_d3.py --input results/$MODEL_KEY/t3_b1.jsonl --coverage 0.4 --out results/$MODEL_KEY/t3_d3_40.jsonl
-          python scripts/apply_d3.py --input results/$MODEL_KEY/t3_b1.jsonl --coverage 0.7 --out results/$MODEL_KEY/t3_d3_70.jsonl
-          python scripts/apply_d3.py --input results/$MODEL_KEY/t3_b1.jsonl --coverage 1.0 --out results/$MODEL_KEY/t3_d3_100.jsonl
+          python scripts/run_generation.py --condition B1 --run-label B1_CONFLICT --model "$MODEL" --tier 3 --out results/$MODEL_KEY/t3_b1.jsonl
+          python scripts/apply_d3.py --input results/$MODEL_KEY/t3_b1.jsonl --coverage 0.4 --run-label D3_CONFLICT_40 --out results/$MODEL_KEY/t3_d3_40.jsonl
+          python scripts/apply_d3.py --input results/$MODEL_KEY/t3_b1.jsonl --coverage 0.7 --run-label D3_CONFLICT_70 --out results/$MODEL_KEY/t3_d3_70.jsonl
+          python scripts/apply_d3.py --input results/$MODEL_KEY/t3_b1.jsonl --coverage 1.0 --run-label D3_CONFLICT_100 --out results/$MODEL_KEY/t3_d3_100.jsonl
 
       - name: One-factor deviations
         if: inputs.phase == 'deviations'
         run: |
-          python scripts/run_generation.py --condition B2 --model "$MODEL" --tier 12 --k 5 --variant out_of_range_vendor_bulletin --poison-count 1 --out results/$MODEL_KEY/dev_bulletin.jsonl
-          python scripts/run_generation.py --condition B2 --model "$MODEL" --tier 12 --k 5 --variant wrong_in_range_plain --poison-count 1 --out results/$MODEL_KEY/dev_wrong_in_range.jsonl
-          python scripts/run_generation.py --condition B2 --model "$MODEL" --tier 12 --k 5 --variant out_of_range_plain --poison-count 3 --out results/$MODEL_KEY/dev_three_poison.jsonl
-          python scripts/run_generation.py --condition B2 --model "$MODEL" --tier 12 --k 2 --variant out_of_range_plain --poison-count 1 --out results/$MODEL_KEY/dev_k2.jsonl
+          python scripts/run_generation.py --condition B2 --run-label B2_BULLETIN_P1 --model "$MODEL" --tier 12 --k 5 --variant out_of_range_vendor_bulletin --poison-count 1 --out results/$MODEL_KEY/dev_bulletin.jsonl
+          python scripts/run_generation.py --condition B2 --run-label B2_WRONG_IN_RANGE_P1 --model "$MODEL" --tier 12 --k 5 --variant wrong_in_range_plain --poison-count 1 --out results/$MODEL_KEY/dev_wrong_in_range.jsonl
+          python scripts/run_generation.py --condition B2 --run-label B2_P1_K2 --model "$MODEL" --tier 12 --k 2 --variant out_of_range_plain --poison-count 1 --out results/$MODEL_KEY/dev_k2.jsonl
 
       - name: Stage-B fixed-context control
         if: inputs.phase == 'stage_b'
