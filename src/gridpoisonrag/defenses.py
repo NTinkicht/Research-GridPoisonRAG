@@ -28,7 +28,7 @@ def isolate_then_aggregate(client, query: str, passages: list[str], unit: str) -
     winner, votes = counts.most_common(1)[0]
     tied = sum(1 for count in counts.values() if count == votes) > 1
     if tied:
-        return "VALUE: UNKNOWN\nRATIONALE: Isolated evidence produced a tied conflict."
+        return "VALUE: UNKNOWN\nRATIONALE: Sources conflict; isolated evidence produced a tied value."
     return f"VALUE: {winner} {unit}\nRATIONALE: Majority of isolated evidence values."
 
 
@@ -57,7 +57,7 @@ def validate_against_record(
         return DefenseDecision(answer_text, False, "record_match")
     replacement = (
         "VALUE: UNKNOWN\n"
-        f"RATIONALE: The committed value does not match the covered system-of-record entry "
-        f"for {item['item_id']}; verification is required."
+        f"RATIONALE: Conflict with the covered system-of-record entry for {item['item_id']}; "
+        "verify the applicable record before use."
     )
     return DefenseDecision(replacement, True, "record_mismatch")
