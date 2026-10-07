@@ -27,9 +27,9 @@ Do not edit frozen benchmark files after seeing model outputs.
 This stage needs no LLM API key and can be run immediately:
 
 ```bash
-python scripts/run_stage_a.py --variant unsafe_plain --poison-count 1 --out results/stage_a_plain_1.jsonl
-python scripts/run_stage_a.py --variant unsafe_plain --poison-count 3 --out results/stage_a_plain_3.jsonl
-python scripts/run_stage_a.py --variant unsafe_vendor_bulletin --poison-count 1 --out results/stage_a_bulletin_1.jsonl
+python scripts/run_stage_a.py --variant out_of_range_plain --poison-count 1 --out results/stage_a_plain_1.jsonl
+python scripts/run_stage_a.py --variant out_of_range_plain --poison-count 3 --out results/stage_a_plain_3.jsonl
+python scripts/run_stage_a.py --variant out_of_range_vendor_bulletin --poison-count 1 --out results/stage_a_bulletin_1.jsonl
 python scripts/summarize_stage_a.py results/stage_a_plain_1.jsonl results/stage_a_plain_3.jsonl results/stage_a_bulletin_1.jsonl
 ```
 
@@ -59,9 +59,9 @@ python scripts/analyze_results.py results/MODEL_b0.jsonl results/MODEL_b1.jsonl
 ## 5. Main poisoned condition and defenses
 
 ```bash
-python scripts/run_generation.py --condition B2 --model MODEL_ID --tier 12 --k 5 --variant unsafe_plain --poison-count 1 --out results/MODEL_b2.jsonl
-python scripts/run_generation.py --condition D1 --model MODEL_ID --tier 12 --k 5 --variant unsafe_plain --poison-count 1 --out results/MODEL_d1.jsonl
-python scripts/run_generation.py --condition D2 --model MODEL_ID --tier 12 --k 5 --variant unsafe_plain --poison-count 1 --out results/MODEL_d2.jsonl
+python scripts/run_generation.py --condition B2 --model MODEL_ID --tier 12 --k 5 --variant out_of_range_plain --poison-count 1 --out results/MODEL_b2.jsonl
+python scripts/run_generation.py --condition D1 --model MODEL_ID --tier 12 --k 5 --variant out_of_range_plain --poison-count 1 --out results/MODEL_d1.jsonl
+python scripts/run_generation.py --condition D2 --model MODEL_ID --tier 12 --k 5 --variant out_of_range_plain --poison-count 1 --out results/MODEL_d2.jsonl
 
 python scripts/apply_d3.py --input results/MODEL_b2.jsonl --coverage 0.4 --out results/MODEL_d3_40.jsonl
 python scripts/apply_d3.py --input results/MODEL_b2.jsonl --coverage 0.7 --out results/MODEL_d3_70.jsonl
@@ -81,8 +81,8 @@ BFFR is the Tier-3 proportion for which D3 flags/refuses an answer that is corre
 
 Only after the main condition works:
 
-- `unsafe_vendor_bulletin`, one poison, k=5;
-- `conservative_plain`, one poison, k=5, on items where defined;
+- `out_of_range_vendor_bulletin`, one poison, k=5;
+- `wrong_in_range_plain`, one poison, k=5, on items where defined;
 - three poison paraphrases, k=5;
 - main attack at k=2;
 - Stage-B forced position first versus last.
