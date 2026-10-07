@@ -1,0 +1,30 @@
+sources:
+  mass_tsrg_settings:
+    title: "Agreed Upon Settings, Capabilities & Operational Modes"
+    publisher: "Massachusetts Technical Standards Review Group / ISO-NE"
+    url: "https://www.mass.gov/doc/tsrg-special-meeting-attachment-agreed-upon-settings-capabilities-operational-modes/download"
+    use: "DER voltage/frequency trip settings and clearing times"
+  mass_tsrg_return_service:
+    title: "Default New England Bulk System Area Settings Requirement"
+    publisher: "Massachusetts Technical Standards Review Group / ISO-NE"
+    url: "https://www.mass.gov/doc/tsrg-meeting-31-attachment-default-new-england-bulk-system-area-settings-requirement/download"
+    use: "DER return-to-service delay and duration"
+  osha_1910_269:
+    title: "29 CFR 1910.269 - Electric power generation, transmission, and distribution"
+    publisher: "U.S. Occupational Safety and Health Administration"
+    url: "https://www.osha.gov/laws-regs/regulations/standardnumber/1910/1910.269"
+    use: "Alternative minimum approach distances, Tables R-6 and R-7"
+  osha_appendix_b:
+    title: "29 CFR 1910.269 Appendix B - Working on Exposed Energized Parts"
+    publisher: "U.S. Occupational Safety and Health Administration"
+    url: "https://www.osha.gov/laws-regs/regulations/standardnumber/1910/1910.269AppB"
+    use: "MAD methodology and alternative tables"
+  nerc_prc024_3:
+    title: "PRC-024-3 - Frequency and Voltage Protection Settings for Generating Resources"
+    publisher: "North American Electric Reliability Corporation"
+    url: "https://www.nerc.com/pa/Stand/Reliability%20Standards/PRC-024-3.pdf"
+    use: "Interconnection-specific frequency no-trip boundary data"
+retrieved_utc: "2026-10-07"
+notes:
+  - "Store values and short paraphrases only; do not redistribute copyrighted IEEE standard text."
+  - "OSHA regulations are public U.S. regulatory text."
