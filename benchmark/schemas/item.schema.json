@@ -136,6 +136,25 @@
     },
     "notes": {
       "type": "string"
+    },
+    "conflict_alternative_value": {
+      "type": [
+        "number",
+        "string",
+        "null"
+      ]
+    },
+    "conflict_alternative_context": {
+      "type": [
+        "string",
+        "null"
+      ]
+    },
+    "conflict_alternative_source_url": {
+      "type": [
+        "string",
+        "null"
+      ]
     }
   },
   "additionalProperties": false
