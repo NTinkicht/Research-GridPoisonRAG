@@ -1,0 +1,33 @@
+[build-system]
+requires = ["setuptools>=68", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "gridpoisonrag"
+version = "0.1.0"
+description = "Consequence-graded knowledge-base poisoning benchmark for utility-operations RAG"
+requires-python = ">=3.11"
+dependencies = [
+  "httpx>=0.27",
+  "jsonschema>=4.23",
+  "numpy>=2.0",
+  "pandas>=2.2",
+  "pyyaml>=6.0",
+  "scikit-learn>=1.5",
+  "scipy>=1.14",
+  "sentence-transformers>=3.0",
+  "tenacity>=9.0",
+]
+
+[project.optional-dependencies]
+dev = ["pytest>=8.3", "ruff>=0.6"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+
+[tool.ruff]
+line-length = 100
+target-version = "py311"
+
+[tool.setuptools.packages.find]
+where = ["src"]
