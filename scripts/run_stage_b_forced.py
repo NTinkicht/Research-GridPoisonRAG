@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import argparse
 import os
+from datetime import datetime, timezone
 from pathlib import Path
 import sys
 
@@ -76,6 +77,11 @@ def main() -> None:
                 "poison_exposed": True,
                 "poison_ranks": [1 if args.position == "first" else 5],
                 "answer": answer,
+                "run_timestamp_utc": datetime.now(timezone.utc).isoformat(),
+                "api_response_id": client.last_metadata.get("response_id"),
+                "api_resolved_model": client.last_metadata.get("resolved_model"),
+                "api_provider": client.last_metadata.get("provider"),
+                "api_usage": client.last_metadata.get("usage"),
                 "label": grade.label,
                 "committed_value": grade.committed_value,
                 "violation": grade.violation,
