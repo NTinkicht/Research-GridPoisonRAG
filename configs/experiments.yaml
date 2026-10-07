@@ -1,44 +1,59 @@
 retrieval:
   model_name: "sentence-transformers/all-MiniLM-L6-v2"
-  main_k: 5
+  natural_k: 5
   secondary_k: 2
   stage_a_k: [1, 2, 5, 10]
 
-conditions:
+reference_conditions:
   B0:
     retrieval: false
-    poison_variant: null
-    cautious_prompt: false
   B1:
     retrieval: true
-    poison_variant: null
-    cautious_prompt: false
-  B2:
-    retrieval: true
-    poison_variant: out_of_range_plain
-    poison_count: 1
-    cautious_prompt: false
-  D1:
-    retrieval: true
-    poison_variant: out_of_range_plain
-    poison_count: 1
-    cautious_prompt: true
-  D2:
-    retrieval: true
-    poison_variant: out_of_range_plain
-    poison_count: 1
-    isolate_then_aggregate: true
-  D3:
-    postprocess: system_of_record
-    coverage: [1.0, 0.7, 0.4]
+    k: 5
 
-one_factor_deviations:
-  - vendor_bulletin
-  - wrong_in_range_direction
-  - three_poison_documents
-  - k_2
-  - forced_position_first_last
+natural_attack:
+  label: B2_P1
+  poison_variant: out_of_range_plain
+  poison_count: 1
+  k: 5
+
+defense_stress:
+  baseline_label: B2_P3_STRESS
+  poison_variant: out_of_range_plain
+  poison_count: 3
+  k: 5
+  defenses:
+    cautious_prompt_label: D1_P3
+    isolate_aggregate_label: D2_P3
+    system_record_labels: [D3_P3_40, D3_P3_70, D3_P3_100]
+    system_record_coverage: [0.4, 0.7, 1.0]
+
+stage_b:
+  purpose: "RQ2 forced-exposure adoption control"
+  poison_variant: out_of_range_plain
+  poison_count: 1
+  context_passages: 5
+  positions: [first, last]
+  phrasing: formal
+
+legitimate_conflicts:
+  clean_label: B1_CONFLICT
+  d3_labels: [D3_CONFLICT_40, D3_CONFLICT_70, D3_CONFLICT_100]
+
+secondary_deviations:
+  - label: B2_BULLETIN_P1
+    poison_variant: out_of_range_vendor_bulletin
+    poison_count: 1
+    k: 5
+  - label: B2_WRONG_IN_RANGE_P1
+    poison_variant: wrong_in_range_plain
+    poison_count: 1
+    k: 5
+  - label: B2_P1_K2
+    poison_variant: out_of_range_plain
+    poison_count: 1
+    k: 2
 
 primary_endpoints:
-  - "Delta SVR of D3 at 70% coverage versus D1 and D2, with BFFR"
-  - "CAR on Tier-1 versus Tier-2 under B2"
+  - "Stage-B attacker adoption: Tier 1 vs Tier 2, poison-first and poison-last separately"
+  - "Delta SVR of D3_P3_70 versus D1_P3 and D2_P3, with D3_CONFLICT_70 BFFR"
