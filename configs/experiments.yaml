@@ -15,17 +15,17 @@ conditions:
     cautious_prompt: false
   B2:
     retrieval: true
-    poison_variant: unsafe_plain
+    poison_variant: out_of_range_plain
     poison_count: 1
     cautious_prompt: false
   D1:
     retrieval: true
-    poison_variant: unsafe_plain
+    poison_variant: out_of_range_plain
     poison_count: 1
     cautious_prompt: true
   D2:
     retrieval: true
-    poison_variant: unsafe_plain
+    poison_variant: out_of_range_plain
     poison_count: 1
     isolate_then_aggregate: true
   D3:
@@ -34,7 +34,7 @@ conditions:
 
 one_factor_deviations:
   - vendor_bulletin
-  - conservative_direction
+  - wrong_in_range_direction
   - three_poison_documents
   - k_2
   - forced_position_first_last
