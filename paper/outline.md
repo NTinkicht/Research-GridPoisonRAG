@@ -72,7 +72,7 @@ Out of scope: confidentiality, prompt injection, availability attacks, model-wei
 Report Poison@k for k={1,2,5,10}; poison count 1 and 3; natural and vendor-framed variants where applicable.
 
 ### Stage B: controlled adoption
-Forced exposure/position control on a subset to separate retrieval from generation effects.
+Forced exposure on all 80 poisonable items using exactly five passages and one poison, with poison-first versus poison-last position control. This is the primary RQ2 design because it separates retrieval exposure from generation adoption.
 
 ### Generation conditions
 B0, B1, B2, D1, D2, D3.
@@ -90,8 +90,8 @@ Automatic numeric grading; manual adjudication for conflict/refusal ambiguity.
 ## 7. Results
 
 Primary:
-1. CAR Tier 1 vs Tier 2 under B2.
-2. Delta-SVR D3@70% vs D1/D2, with BFFR.
+1. Stage-B attacker-value adoption under forced exposure, Tier 1 vs Tier 2, reported separately for poison-first and poison-last contexts.
+2. Delta-SVR D3_P3_70 vs D1_P3/D2_P3 under the three-poison stress condition, with D3_CONFLICT_70 BFFR.
 
 Secondary:
 - retrieval exposure;
