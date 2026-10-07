@@ -31,7 +31,7 @@ def main() -> None:
     p.add_argument("--k", type=int, default=5)
     p.add_argument("--variant", default="unsafe_plain")
     p.add_argument("--poison-count", type=int, default=1)
-    p.add_argument("--tier", choices=["1", "2", "both"], default="both")
+    p.add_argument("--tier", choices=["1", "2", "3", "12", "all"], default="12")
     p.add_argument("--limit", type=int)
     p.add_argument("--out", required=True)
     args = p.parse_args()
@@ -41,13 +41,24 @@ def main() -> None:
         api_key=os.environ["OPENAI_COMPAT_API_KEY"],
         model=args.model,
     )
-    items = read_jsonl(ROOT / "benchmark/items/tier1_public.jsonl") + read_jsonl(
-        ROOT / "benchmark/items/tier2_assets.jsonl"
+    items = (
+        read_jsonl(ROOT / "benchmark/items/tier1_public.jsonl")
+        + read_jsonl(ROOT / "benchmark/items/tier2_assets.jsonl")
+        + read_jsonl(ROOT / "benchmark/items/tier3_conflicts.jsonl")
     )
-    if args.tier != "both":
-        items = [x for x in items if x["tier"] == int(args.tier)]
+    if args.tier == "1":
+        items = [x for x in items if x["tier"] == 1]
+    elif args.tier == "2":
+        items = [x for x in items if x["tier"] == 2]
+    elif args.tier == "3":
+        items = [x for x in items if x["tier"] == 3]
+    elif args.tier == "12":
+        items = [x for x in items if x["tier"] in {1, 2}]
     if args.limit:
         items = items[: args.limit]
+
+    if args.condition in {"B2", "D1", "D2"} and any(x["tier"] == 3 for x in items):
+        raise SystemExit("Tier 3 is a benign-conflict set; use B0/B1 then apply D3, not poisoning conditions.")
 
     clean = read_jsonl(ROOT / "corpus/clean_documents.jsonl")
     poisons = read_jsonl(ROOT / "corpus/poison_variants.jsonl")
