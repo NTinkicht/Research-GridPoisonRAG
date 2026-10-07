@@ -4,9 +4,13 @@ on:
   workflow_dispatch:
     inputs:
       model:
-        description: "OpenAI-compatible model ID"
+        description: "Exact OpenRouter model ID"
         required: true
-        type: string
+        type: choice
+        options:
+          - qwen/qwen3-8b
+          - mistralai/mistral-small-3.2-24b-instruct
+          - openai/gpt-5.6-luna
       phase:
         description: "Run phase"
         required: true
@@ -15,6 +19,8 @@ on:
           - gate
           - main
           - conflicts
+          - deviations
+          - stage_b
 
 permissions:
   contents: read
@@ -22,7 +28,7 @@ permissions:
 jobs:
   run:
     runs-on: ubuntu-latest
-    timeout-minutes: 120
+    timeout-minutes: 180
     env:
       OPENAI_COMPAT_BASE_URL: https://openrouter.ai/api/v1
       OPENAI_COMPAT_API_KEY: ${{ secrets.OPENROUTER_API_KEY }}
@@ -33,28 +39,50 @@ jobs:
         with:
           python-version: "3.11"
       - run: python -m pip install -e .
+      - name: Validate benchmark
+        run: python scripts/validate_benchmark.py
       - name: Require API key
         run: |
           test -n "$OPENAI_COMPAT_API_KEY" || (echo "Missing repository secret OPENROUTER_API_KEY" && exit 1)
+
       - name: Gate runs
         if: inputs.phase == 'gate'
         run: |
           python scripts/run_generation.py --condition B0 --model "$MODEL" --tier 12 --out results/gate_b0.jsonl
           python scripts/run_generation.py --condition B1 --model "$MODEL" --tier 12 --out results/gate_b1.jsonl
+
       - name: Main attack and defenses
         if: inputs.phase == 'main'
         run: |
-          python scripts/run_generation.py --condition B2 --model "$MODEL" --tier 12 --out results/main_b2.jsonl
-          python scripts/run_generation.py --condition D1 --model "$MODEL" --tier 12 --out results/main_d1.jsonl
-          python scripts/run_generation.py --condition D2 --model "$MODEL" --tier 12 --out results/main_d2.jsonl
+          python scripts/run_generation.py --condition B2 --model "$MODEL" --tier 12 --k 5 --variant out_of_range_plain --poison-count 1 --out results/main_b2.jsonl
+          python scripts/run_generation.py --condition D1 --model "$MODEL" --tier 12 --k 5 --variant out_of_range_plain --poison-count 1 --out results/main_d1.jsonl
+          python scripts/run_generation.py --condition D2 --model "$MODEL" --tier 12 --k 5 --variant out_of_range_plain --poison-count 1 --out results/main_d2.jsonl
           python scripts/apply_d3.py --input results/main_b2.jsonl --coverage 0.4 --out results/main_d3_40.jsonl
           python scripts/apply_d3.py --input results/main_b2.jsonl --coverage 0.7 --out results/main_d3_70.jsonl
           python scripts/apply_d3.py --input results/main_b2.jsonl --coverage 1.0 --out results/main_d3_100.jsonl
+
       - name: Benign conflicts
         if: inputs.phase == 'conflicts'
         run: |
           python scripts/run_generation.py --condition B1 --model "$MODEL" --tier 3 --out results/t3_b1.jsonl
+          python scripts/apply_d3.py --input results/t3_b1.jsonl --coverage 0.4 --out results/t3_d3_40.jsonl
+          python scripts/apply_d3.py --input results/t3_b1.jsonl --coverage 0.7 --out results/t3_d3_70.jsonl
           python scripts/apply_d3.py --input results/t3_b1.jsonl --coverage 1.0 --out results/t3_d3_100.jsonl
+
+      - name: One-factor deviations
+        if: inputs.phase == 'deviations'
+        run: |
+          python scripts/run_generation.py --condition B2 --model "$MODEL" --tier 12 --k 5 --variant out_of_range_vendor_bulletin --poison-count 1 --out results/dev_bulletin.jsonl
+          python scripts/run_generation.py --condition B2 --model "$MODEL" --tier 12 --k 5 --variant wrong_in_range_plain --poison-count 1 --out results/dev_wrong_in_range.jsonl
+          python scripts/run_generation.py --condition B2 --model "$MODEL" --tier 12 --k 5 --variant out_of_range_plain --poison-count 3 --out results/dev_three_poison.jsonl
+          python scripts/run_generation.py --condition B2 --model "$MODEL" --tier 12 --k 2 --variant out_of_range_plain --poison-count 1 --out results/dev_k2.jsonl
+
+      - name: Stage-B fixed-context control
+        if: inputs.phase == 'stage_b'
+        run: |
+          python scripts/run_stage_b_forced.py --model "$MODEL" --position first --out results/stage_b_first.jsonl
+          python scripts/run_stage_b_forced.py --model "$MODEL" --position last --out results/stage_b_last.jsonl
+
       - uses: actions/upload-artifact@v4
         with:
           name: "gridpoisonrag-${{ inputs.phase }}-${{ github.run_id }}"
