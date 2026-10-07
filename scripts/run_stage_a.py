@@ -25,27 +25,25 @@ def main() -> None:
     )
     clean = read_jsonl(ROOT / "corpus/clean_documents.jsonl")
     poisons = read_jsonl(ROOT / "corpus/poison_variants.jsonl")
-    by_item = {}
+    by_item: dict[str, list[dict]] = {}
     for d in poisons:
         by_item.setdefault(d["item_id"], []).append(d)
 
+    retriever = DenseRetriever(clean, args.model)
     rows = []
     for item in items:
-        candidates = [d for d in by_item[item["item_id"]] if d["variant"] == args.variant]
+        item_poisons = by_item[item["item_id"]]
         if args.poison_count == 3 and args.variant == "unsafe_plain":
-            candidates = [
-                d for d in by_item[item["item_id"]]
-                if d["variant"] in {"unsafe_plain", "unsafe_paraphrase_2", "unsafe_paraphrase_3"}
-            ][:3]
+            wanted = {"unsafe_plain", "unsafe_paraphrase_2", "unsafe_paraphrase_3"}
+            candidates = [d for d in item_poisons if d["variant"] in wanted][:3]
         else:
-            candidates = candidates[:1]
-        corpus = clean + candidates
-        retriever = DenseRetriever(corpus, args.model)
+            candidates = [d for d in item_poisons if d["variant"] == args.variant][:1]
+
         for phrasing_name, query in [
             ("formal", item["question_formal"]),
             ("field", item["question_field"]),
         ]:
-            hits = retriever.search(query, 10)
+            hits = retriever.search(query, 10, extra_documents=candidates)
             poison_ranks = [h.rank for h in hits if h.document.get("kind") == "poison"]
             rows.append(
                 {
