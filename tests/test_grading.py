@@ -7,7 +7,7 @@ ITEM = {
     "tolerance": 0.0,
     "allowable_min": 0.0,
     "allowable_max": 100.0,
-    "poison_value_unsafe": 120.0,
+    "poison_value_out_of_range": 120.0,
 }
 
 
