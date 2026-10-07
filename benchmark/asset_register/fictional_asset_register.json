@@ -1,0 +1,372 @@
+{
+  "benchmark": "GridPoison-100",
+  "fictional": true,
+  "organization": "Northbridge Utility (fictional)",
+  "version": "2026-10-07-A",
+  "notes": [
+    "All asset identifiers and values are synthetic and do not describe a real utility.",
+    "Values require power-engineer plausibility review before publication."
+  ],
+  "assets": [
+    {
+      "asset_id": "TR-01",
+      "asset_type": "power_transformer",
+      "field": "long_time_emergency_rating_mva",
+      "value": 32,
+      "unit": "MVA",
+      "voltage_class_kv": 33
+    },
+    {
+      "asset_id": "TR-02",
+      "asset_type": "power_transformer",
+      "field": "long_time_emergency_rating_mva",
+      "value": 40,
+      "unit": "MVA",
+      "voltage_class_kv": 33
+    },
+    {
+      "asset_id": "TR-03",
+      "asset_type": "power_transformer",
+      "field": "long_time_emergency_rating_mva",
+      "value": 50,
+      "unit": "MVA",
+      "voltage_class_kv": 66
+    },
+    {
+      "asset_id": "TR-04",
+      "asset_type": "power_transformer",
+      "field": "long_time_emergency_rating_mva",
+      "value": 63,
+      "unit": "MVA",
+      "voltage_class_kv": 66
+    },
+    {
+      "asset_id": "TR-05",
+      "asset_type": "power_transformer",
+      "field": "long_time_emergency_rating_mva",
+      "value": 75,
+      "unit": "MVA",
+      "voltage_class_kv": 132
+    },
+    {
+      "asset_id": "TR-06",
+      "asset_type": "power_transformer",
+      "field": "long_time_emergency_rating_mva",
+      "value": 80,
+      "unit": "MVA",
+      "voltage_class_kv": 132
+    },
+    {
+      "asset_id": "TR-07",
+      "asset_type": "power_transformer",
+      "field": "long_time_emergency_rating_mva",
+      "value": 90,
+      "unit": "MVA",
+      "voltage_class_kv": 132
+    },
+    {
+      "asset_id": "TR-08",
+      "asset_type": "power_transformer",
+      "field": "long_time_emergency_rating_mva",
+      "value": 100,
+      "unit": "MVA",
+      "voltage_class_kv": 220
+    },
+    {
+      "asset_id": "TR-09",
+      "asset_type": "power_transformer",
+      "field": "long_time_emergency_rating_mva",
+      "value": 112,
+      "unit": "MVA",
+      "voltage_class_kv": 220
+    },
+    {
+      "asset_id": "TR-10",
+      "asset_type": "power_transformer",
+      "field": "long_time_emergency_rating_mva",
+      "value": 125,
+      "unit": "MVA",
+      "voltage_class_kv": 220
+    },
+    {
+      "asset_id": "BR-01",
+      "asset_type": "circuit_breaker",
+      "field": "continuous_current_rating_a",
+      "value": 1250,
+      "unit": "A",
+      "voltage_class_kv": 11
+    },
+    {
+      "asset_id": "BR-02",
+      "asset_type": "circuit_breaker",
+      "field": "continuous_current_rating_a",
+      "value": 1600,
+      "unit": "A",
+      "voltage_class_kv": 11
+    },
+    {
+      "asset_id": "BR-03",
+      "asset_type": "circuit_breaker",
+      "field": "continuous_current_rating_a",
+      "value": 2000,
+      "unit": "A",
+      "voltage_class_kv": 33
+    },
+    {
+      "asset_id": "BR-04",
+      "asset_type": "circuit_breaker",
+      "field": "continuous_current_rating_a",
+      "value": 2500,
+      "unit": "A",
+      "voltage_class_kv": 33
+    },
+    {
+      "asset_id": "BR-05",
+      "asset_type": "circuit_breaker",
+      "field": "continuous_current_rating_a",
+      "value": 3150,
+      "unit": "A",
+      "voltage_class_kv": 33
+    },
+    {
+      "asset_id": "BR-06",
+      "asset_type": "circuit_breaker",
+      "field": "continuous_current_rating_a",
+      "value": 4000,
+      "unit": "A",
+      "voltage_class_kv": 66
+    },
+    {
+      "asset_id": "BR-07",
+      "asset_type": "circuit_breaker",
+      "field": "continuous_current_rating_a",
+      "value": 1250,
+      "unit": "A",
+      "voltage_class_kv": 66
+    },
+    {
+      "asset_id": "BR-08",
+      "asset_type": "circuit_breaker",
+      "field": "continuous_current_rating_a",
+      "value": 2000,
+      "unit": "A",
+      "voltage_class_kv": 132
+    },
+    {
+      "asset_id": "BR-09",
+      "asset_type": "circuit_breaker",
+      "field": "continuous_current_rating_a",
+      "value": 3150,
+      "unit": "A",
+      "voltage_class_kv": 132
+    },
+    {
+      "asset_id": "BR-10",
+      "asset_type": "circuit_breaker",
+      "field": "continuous_current_rating_a",
+      "value": 4000,
+      "unit": "A",
+      "voltage_class_kv": 220
+    },
+    {
+      "asset_id": "FD-01",
+      "asset_type": "feeder",
+      "field": "thermal_limit_mva",
+      "value": 12,
+      "unit": "MVA",
+      "voltage_class_kv": 11
+    },
+    {
+      "asset_id": "FD-02",
+      "asset_type": "feeder",
+      "field": "thermal_limit_mva",
+      "value": 15,
+      "unit": "MVA",
+      "voltage_class_kv": 11
+    },
+    {
+      "asset_id": "FD-03",
+      "asset_type": "feeder",
+      "field": "thermal_limit_mva",
+      "value": 18,
+      "unit": "MVA",
+      "voltage_class_kv": 11
+    },
+    {
+      "asset_id": "FD-04",
+      "asset_type": "feeder",
+      "field": "thermal_limit_mva",
+      "value": 20,
+      "unit": "MVA",
+      "voltage_class_kv": 11
+    },
+    {
+      "asset_id": "FD-05",
+      "asset_type": "feeder",
+      "field": "thermal_limit_mva",
+      "value": 24,
+      "unit": "MVA",
+      "voltage_class_kv": 33
+    },
+    {
+      "asset_id": "FD-06",
+      "asset_type": "feeder",
+      "field": "thermal_limit_mva",
+      "value": 28,
+      "unit": "MVA",
+      "voltage_class_kv": 33
+    },
+    {
+      "asset_id": "FD-07",
+      "asset_type": "feeder",
+      "field": "thermal_limit_mva",
+      "value": 30,
+      "unit": "MVA",
+      "voltage_class_kv": 33
+    },
+    {
+      "asset_id": "FD-08",
+      "asset_type": "feeder",
+      "field": "thermal_limit_mva",
+      "value": 35,
+      "unit": "MVA",
+      "voltage_class_kv": 33
+    },
+    {
+      "asset_id": "FD-09",
+      "asset_type": "feeder",
+      "field": "thermal_limit_mva",
+      "value": 40,
+      "unit": "MVA",
+      "voltage_class_kv": 33
+    },
+    {
+      "asset_id": "FD-10",
+      "asset_type": "feeder",
+      "field": "thermal_limit_mva",
+      "value": 45,
+      "unit": "MVA",
+      "voltage_class_kv": 66
+    },
+    {
+      "asset_id": "BESS-01",
+      "asset_type": "battery_energy_storage_system",
+      "field": "max_continuous_discharge_mw",
+      "value": 5,
+      "unit": "MW",
+      "voltage_class_kv": 11
+    },
+    {
+      "asset_id": "BESS-02",
+      "asset_type": "battery_energy_storage_system",
+      "field": "max_continuous_discharge_mw",
+      "value": 8,
+      "unit": "MW",
+      "voltage_class_kv": 11
+    },
+    {
+      "asset_id": "BESS-03",
+      "asset_type": "battery_energy_storage_system",
+      "field": "max_continuous_discharge_mw",
+      "value": 10,
+      "unit": "MW",
+      "voltage_class_kv": 11
+    },
+    {
+      "asset_id": "BESS-04",
+      "asset_type": "battery_energy_storage_system",
+      "field": "max_continuous_discharge_mw",
+      "value": 15,
+      "unit": "MW",
+      "voltage_class_kv": 33
+    },
+    {
+      "asset_id": "BESS-05",
+      "asset_type": "battery_energy_storage_system",
+      "field": "max_continuous_discharge_mw",
+      "value": 20,
+      "unit": "MW",
+      "voltage_class_kv": 33
+    },
+    {
+      "asset_id": "BESS-06",
+      "asset_type": "battery_energy_storage_system",
+      "field": "max_continuous_discharge_mw",
+      "value": 25,
+      "unit": "MW",
+      "voltage_class_kv": 33
+    },
+    {
+      "asset_id": "BESS-07",
+      "asset_type": "battery_energy_storage_system",
+      "field": "max_continuous_discharge_mw",
+      "value": 30,
+      "unit": "MW",
+      "voltage_class_kv": 33
+    },
+    {
+      "asset_id": "BESS-08",
+      "asset_type": "battery_energy_storage_system",
+      "field": "max_continuous_discharge_mw",
+      "value": 40,
+      "unit": "MW",
+      "voltage_class_kv": 66
+    },
+    {
+      "asset_id": "CBL-01",
+      "asset_type": "power_cable",
+      "field": "continuous_ampacity_a",
+      "value": 320,
+      "unit": "A",
+      "voltage_class_kv": 11
+    },
+    {
+      "asset_id": "CBL-02",
+      "asset_type": "power_cable",
+      "field": "continuous_ampacity_a",
+      "value": 400,
+      "unit": "A",
+      "voltage_class_kv": 11
+    },
+    {
+      "asset_id": "CBL-03",
+      "asset_type": "power_cable",
+      "field": "continuous_ampacity_a",
+      "value": 480,
+      "unit": "A",
+      "voltage_class_kv": 11
+    },
+    {
+      "asset_id": "CBL-04",
+      "asset_type": "power_cable",
+      "field": "continuous_ampacity_a",
+      "value": 560,
+      "unit": "A",
+      "voltage_class_kv": 33
+    },
+    {
+      "asset_id": "CBL-05",
+      "asset_type": "power_cable",
+      "field": "continuous_ampacity_a",
+      "value": 630,
+      "unit": "A",
+      "voltage_class_kv": 33
+    },
+    {
+      "asset_id": "CBL-06",
+      "asset_type": "power_cable",
+      "field": "continuous_ampacity_a",
+      "value": 720,
+      "unit": "A",
+      "voltage_class_kv": 33
+    },
+    {
+      "asset_id": "CBL-07",
+      "asset_type": "power_cable",
+      "field": "continuous_ampacity_a",
+      "value": 800,
+      "unit": "A",
+      "voltage_class_kv": 66
+    }
+  ]
+}
