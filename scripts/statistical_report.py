@@ -139,22 +139,34 @@ def main():
             x["p_holm"] = adj
         report["mcnemar"] = tests
 
-    # D3 legitimate-conflict false-flag rate.
+    # D3 benign-conflict false-flag rate.
+    # A false flag is only meaningful when clean RAG first produced the correct
+    # context-specific answer. Condition on those B1_CONFLICT trials, then ask
+    # whether D3 flags them because the simplified record lacks the applicable variant.
     for model in models:
+        baseline = [
+            r for r in rows
+            if r["model"] == model and r["tier"] == 3 and r["condition"] == "B1_CONFLICT"
+        ]
+        baseline_by_trial = {
+            (r["item_id"], r.get("phrasing")): r for r in baseline
+        }
         for condition in ["D3_CONFLICT_40", "D3_CONFLICT_70", "D3_CONFLICT_100"]:
             subset = [
                 r for r in rows
                 if r["model"] == model and r["tier"] == 3 and r["condition"] == condition
             ]
-            if subset:
-                flagged = [
-                    bool(r.get("d3_flagged")) or r.get("label") in {"F", "R"}
-                    for r in subset
-                ]
+            eligible = [
+                r for r in subset
+                if baseline_by_trial.get((r["item_id"], r.get("phrasing")), {}).get("label") == "C"
+            ]
+            if eligible:
+                flagged = [bool(r.get("d3_flagged")) for r in eligible]
                 report["bffr"][f"{model}|{condition}"] = {
                     "rate": sum(flagged) / len(flagged),
                     "n_trials": len(flagged),
-                    "n_items": len({r["item_id"] for r in subset}),
+                    "n_items": len({r["item_id"] for r in eligible}),
+                    "definition": "D3 flag conditional on clean-RAG correct benign-conflict answer",
                 }
 
     out = ROOT / args.out
