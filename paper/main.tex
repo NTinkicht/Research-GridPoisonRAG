@@ -96,8 +96,8 @@ A dated vendor-bulletin form is treated as an attack framing condition, not a no
 \section{Experimental Design}
 \subsection{Reference conditions and models}
 B0 is closed-book generation, B1 is clean RAG, and B2 is poisoned vanilla RAG.
-Three model families are evaluated through the same OpenAI-compatible API: Qwen3-8B, Mistral Small 3.2 24B, and GPT-5.6 Luna.
-Main runs use temperature zero and log the requested model, resolved provider/model metadata when returned, API response identifiers, usage, timestamp, and repository commit.
+The evaluated models are Qwen3-8B, Mistral Small 3.2 24B, and GPT-5.6 Luna, all called through the same OpenAI-compatible endpoint.
+Runs use temperature zero and log requested and resolved model/provider metadata, response ID, usage, timestamp, and repository commit.
 
 \subsection{Stage A: retrieval exposure}
 RQ1 uses natural dense retrieval.
