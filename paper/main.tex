@@ -15,9 +15,9 @@
 \begin{abstract}
 Retrieval-augmented generation (RAG) is increasingly considered for document-grounded technical lookup, but indexed repositories can contain low-trust contributions.
 Prior work has established that knowledge-base poisoning can steer RAG answers.
-This work instead asks how such corruption translates into consequence-graded numeric integrity failures in utility-operations lookups, whether public-standard facts benefit more from parametric knowledge than asset-specific facts, and how much an independent system-of-record check can reduce out-of-range commitments under incomplete coverage.
-We introduce GridPoison-100, a benchmark of public-source, fictional asset-specific, and legitimate-conflict lookups, and decompose attack success into retrieval exposure and conditional adoption.
-Results will be inserted only after the frozen benchmark and preregistered analysis are complete.
+We study a narrower operational question: when a legitimate utility staff member asks for a numeric fact, how often does a low-trust document cause the assistant to commit to an out-of-range value, and what does checking an independent system of record buy?
+We introduce GridPoison-100, a consequence-graded benchmark containing public-standard facts, asset-specific facts from a declared fictional utility register, and legitimate jurisdictional conflicts.
+The study decomposes attack success into retrieval exposure and conditional adoption, uses a forced-exposure control to compare public and asset-specific facts without retrieval-selection bias, and evaluates cautious prompting, isolate-then-aggregate evidence voting, and system-of-record validation under incomplete coverage.
 \end{abstract}
 
 \begin{IEEEkeywords}
@@ -25,73 +25,160 @@ retrieval-augmented generation, knowledge-base poisoning, power systems, utility
 \end{IEEEkeywords}
 
 \section{Introduction}
-Document-grounded language-model assistants can make technical information easier to retrieve, but retrieval introduces a distinct integrity dependency: a legitimate user can receive a false value when low-trust content enters an indexed repository.
-The attack itself is not new.
-Our focus is the operational consequence of adoption, the role of parametric prior knowledge, and validation against an independent structured record.
+Large language models are increasingly proposed as natural-language interfaces to technical documentation.
+In power and utility settings, the most plausible near-term use is not autonomous control but constrained lookup: a field worker asks for an approach distance, a protection engineer checks an interconnection boundary, or a planner retrieves an approved asset limit.
+RAG makes such answers auditable by grounding them in external documents, yet it also creates a write-path dependency.
+If an indexed repository accepts contributions from contractors, shared drives, wikis, or externally supplied bulletins, a legitimate user can receive an incorrect value even when the user's prompt is benign.
 
-We study three research questions:
-\textbf{RQ1}: How does targeted knowledge-base poisoning split into retrieval exposure and conditional adoption?
-\textbf{RQ2}: Does parametric knowledge protect public-standard facts more than asset-specific operational facts?
-\textbf{RQ3}: How much does system-of-record validation reduce out-of-range answers relative to prompt-level and isolate-then-aggregate defenses, and what false-flag cost does it introduce on legitimate conflicts?
+Knowledge-base poisoning of RAG is already established~\cite{zou2025poisonedrag,pereira2026influence}.
+Accordingly, our contribution is not another demonstration that injected text can influence an answer.
+Instead, we ask what poisoning means when the answer can be graded against an authoritative operational record, whether model prior knowledge protects public facts more than asset-specific facts, and how a separate structured record changes the failure mode.
+
+We study three research questions.
+\textbf{RQ1} asks how targeted poisoning decomposes into retrieval exposure and conditional adoption.
+\textbf{RQ2} asks whether attacker-value adoption differs between public-standard facts and asset-specific facts when exposure is held constant.
+\textbf{RQ3} asks how much system-of-record validation reduces out-of-range commitments relative to two generic defenses, and what false-flag cost it introduces when legitimate documents disagree by jurisdiction or interconnection.
+
+The contributions are fourfold:
+(1) a write-path threat model for low-trust utility-document repositories;
+(2) GridPoison-100, a released benchmark with source-grounded public items, a fictional asset register, and legitimate-conflict controls;
+(3) a two-stage evaluation that separates retrieval compromise, conditional adoption, and consequence grading; and
+(4) an empirical evaluation of system-of-record validation under partial coverage rather than as an oracle.
 
 \section{Related Work}
-Knowledge-base poisoning of RAG systems is established by PoisonedRAG and subsequent work~\cite{zou2025poisonedrag,pereira2026influence}.
-RobustRAG provides an isolate-then-aggregate defense baseline~\cite{xiang2024robustrag}.
-ClashEval studies conflict between model priors and retrieved evidence~\cite{wu2024clasheval}, while evidence framing and metadata effects have also been studied~\cite{wan2024evidence,chiang2024metadata}.
-Power-system LLM security has already been discussed and validated in prior work~\cite{ruan2024power,li2024smartgridrisk}; therefore we make no claim of being the first LLM-security study in this domain.
+PoisonedRAG showed that a small number of attacker-controlled texts can steer retrieval-augmented models toward targeted answers~\cite{zou2025poisonedrag}.
+Subsequent work has examined retrieval, database, and generator factors that influence poisoning exposure and attack success~\cite{pereira2026influence}.
+Because those effects are already known, retrieval depth is a secondary factor here rather than a novelty claim.
+
+RobustRAG introduced an isolate-then-aggregate strategy for retrieval corruption~\cite{xiang2024robustrag}; we use this family as a generic defense baseline rather than presenting it as new.
+ClashEval quantified conflicts between parametric knowledge and retrieved evidence~\cite{wu2024clasheval}.
+Other work has shown that evidence phrasing, publication time, and metadata can affect model preferences~\cite{wan2024evidence,chiang2024metadata}.
+These findings motivate our vendor-bulletin condition but also rule out treating authority framing as a primary contribution.
+
+LLM risks in power systems have already been discussed and experimentally explored~\cite{ruan2024power,li2024smartgridrisk}.
+Our study therefore avoids claims of being the first LLM-security work in the domain.
+The distinction from our prior healthcare RAG work is also explicit: that work asks whether an unauthorized reader can obtain protected information, whereas the present study asks whether an authorized reader receives a false operational value after a low-trust writer inserts content into the retrieval corpus.
 
 \section{Threat Model}
-The attacker is an authorized but low-trust writer, or the sender of a spoofed bulletin, who can add one to three new documents to an indexed repository.
-The attacker cannot edit or delete existing documents and cannot alter the utility's system of record, EMS/SCADA, or model weights.
-The attacker knows the target asset or topic but not the exact query wording, retriever, embedding model, or remaining corpus.
-The goal is targeted answer-integrity corruption in a legitimate lookup.
+The attacker is an authorized but low-trust writer, such as a contractor with write access to an indexed collaboration repository, or the sender of a spoofed technical bulletin that is subsequently indexed.
+The attacker may add one to three new documents but cannot edit or delete existing documents.
+They cannot modify the structured asset/settings record, EMS/SCADA, protection devices, model weights, or the user's query.
+The attacker knows the target asset or topic but not the exact query wording, embedding model, retrieval results, or surrounding corpus.
+
+The attack goal is targeted answer-integrity corruption: a legitimate lookup should commit to an attacker-chosen numeric value.
+The primary poison is a factual statement rather than an instruction to the model, separating this setting from indirect prompt injection.
+Confidentiality, availability, model-weight poisoning, multi-turn social engineering, and physical control-loop attacks are outside scope.
 
 \section{GridPoison-100}
-The benchmark contains 35 public-source normative items, 45 asset-specific items from a declared fictional utility register, and 20 legitimate-conflict items.
-Every item records a committed target value, unit, applicability conditions, source or record locator, allowable interval where defined, and two query phrasings.
-The corpus contains 400 short clean support/distractor documents and controlled poison variants.
+GridPoison-100 contains 100 lookup items divided into three tiers.
+Tier~1 contains 35 public normative facts drawn from Massachusetts DER settings material, OSHA 29 CFR 1910.269 minimum-approach-distance tables, and NERC PRC-024-3 interconnection boundaries~\cite{osha1910269,nercprc0243,matsrgsettings}.
+Each public item records a source URL, source locator, units, applicability conditions, and an allowable interval.
+
+Tier~2 contains 45 asset-specific facts from a declared fictional utility register.
+Asset identifiers and values are synthetic by construction, preventing a model from knowing them from pretraining.
+The register covers transformer emergency ratings, breaker current ratings, feeder thermal limits, BESS continuous discharge limits, and cable ampacity values.
+For Tier~2, the register is the authoritative record by construction; no claim is made that these values describe a real network.
+
+Tier~3 contains 20 legitimate-conflict items.
+Two documents can disagree because of jurisdiction, interconnection, category, or table scope, while the query explicitly names which context applies.
+These items are not poisoned; they measure whether a defense incorrectly flags a correct context-specific answer.
+
+The clean corpus contains 400 short documents: three support documents for each poisonable item, legitimate-conflict documents, and on-topic distractors.
+Poison variants are generated as minimal factual edits.
+The main poison changes the critical numeric value outside the encoded allowable range.
+A secondary wrong-but-in-range variant separates factual incorrectness from consequence violation.
+A dated vendor-bulletin form is treated as an attack framing condition, not a novel mechanism.
 
 \section{Experimental Design}
-We report closed-book (B0), clean-RAG (B1), and poisoned vanilla RAG (B2) reference conditions.
-Defenses are cautious prompting (D1), isolate-then-aggregate (D2), and deterministic system-of-record validation (D3).
-D3 is evaluated at 40\%, 70\%, and 100\% record coverage.
+\subsection{Reference conditions and models}
+B0 is closed-book generation, B1 is clean RAG, and B2 is poisoned vanilla RAG.
+Three model families are evaluated through the same OpenAI-compatible API: Qwen3-8B, Mistral Small 3.2 24B, and GPT-5.6 Luna.
+Main runs use temperature zero and log the requested model, resolved provider/model metadata when returned, API response identifiers, usage, timestamp, and repository commit.
 
-Natural-retrieval RQ1 includes one- and three-document attacks at $k=5$.
-A retrieval-only calibration showed that one-document exposure was highly imbalanced across the public-standard and asset-specific tiers, so RQ2 uses a fixed five-passage Stage-B context with exactly one poisoned document and counterbalanced first/last position.
-For RQ3, the three-document $k=5$ condition is used as the defense stress condition to avoid a retrieval floor.
-All remaining factors are one-factor deviations rather than a full factorial experiment.
+\subsection{Stage A: retrieval exposure}
+RQ1 uses natural dense retrieval.
+The lower-strength condition inserts one out-of-range poison; the stress condition inserts three distinct poison paraphrases.
+Poison@$k$ is reported separately from generation behavior.
+A retrieval-only pre-generation calibration found that one-document exposure was strongly imbalanced between Tier~1 and Tier~2, which would confound a direct cross-tier adoption comparison.
 
-\section{Metrics and Statistics}
-Each trial is labelled correct (C), attacker value adopted (A), other wrong value (W), conflict flagged (F), or refusal (R).
-Let $E_t$ denote whether poison is present in the retrieved top-$k$ context.
-We report Poison@$k$, attack success rate (ASR), conditional adoption rate (CAR), correct-response rate (CRR), conflict-flag rate (CFR), and the benchmark violation rate (SVR).
+\subsection{Stage B: forced exposure}
+RQ2 therefore uses a fixed five-passage context rather than natural retrieval.
+Each item receives three clean same-item support passages, one deterministic on-topic distractor, and exactly one poison.
+The poison is counterbalanced in the first or last position.
+This design holds exposure and context length constant while testing whether models fall back on parametric knowledge differently for public-standard and asset-specific facts.
 
+\subsection{Defenses}
+D1 is a cautious prompt instructing the model to identify unresolved source conflicts.
+D2 isolates each retrieved passage, obtains one value per passage, and aggregates by majority, following the isolate-then-aggregate defense family~\cite{xiang2024robustrag}.
+D3 is deterministic system-of-record validation: when a committed value is covered by the structured record, a mismatch is replaced by a verification flag.
+D3 is evaluated at 40\%, 70\%, and 100\% deterministic coverage.
+The record is deliberately imperfect for some legitimate jurisdictional variants, making false flags measurable instead of giving D3 oracle access to the answer key.
+
+RQ3 uses the three-poison $k=5$ stress condition to avoid a retrieval floor when comparing defenses.
+Secondary one-factor deviations examine a dated vendor bulletin, a wrong-but-in-range value, and $k=2$.
+No full factorial sweep is performed.
+
+\section{Metrics and Statistical Analysis}
+Every generation trial receives exactly one label:
+correct (\textbf{C}), attacker value adopted (\textbf{A}), other wrong value (\textbf{W}), conflict correctly flagged (\textbf{F}), or refusal (\textbf{R}).
+Numeric C/A/W grading is deterministic from the required \texttt{VALUE:} line and item tolerance.
+
+Let $E_t$ indicate whether a poisoned document occurs in the retrieved top-$k$ context.
+We report Poison@$k$, attack success rate (ASR), conditional adoption rate (CAR), correct-response rate (CRR), conflict-flag rate (CFR), and benchmark violation rate (SVR):
 \begin{equation}
-\mathrm{CAR} = P(A \mid E_t=1).
+\mathrm{CAR}=P(A\mid E_t=1),
 \end{equation}
+\begin{equation}
+\mathrm{SVR}=\frac{1}{|T|}\sum_t \mathbb{1}[\hat v_t \notin [L_i,U_i]].
+\end{equation}
+SVR is a benchmark consequence metric only; it is not a physical grid-safety measure.
 
-The benchmark item, not the individual phrasing, is the unit of analysis.
-Rates receive 95\% cluster-bootstrap intervals over items.
-The primary RQ2 endpoint is attacker-value adoption under forced exposure, reported separately by tier and poison position.
-The primary RQ3 endpoint is the paired reduction in benchmark violation rate for 70\% system-of-record coverage relative to prompt-level and isolate-then-aggregate defenses, reported with its benign-conflict false-flag rate.
-Paired defense comparisons use McNemar tests with Holm correction.
+The item is the unit of analysis.
+Two query phrasings are repeated observations, not independent samples.
+All rate estimates receive 95\% cluster-bootstrap intervals over items with 2,000 resamples.
+Paired defense comparisons use exact McNemar tests with Holm correction.
+The primary RQ2 endpoint is attacker-value adoption under forced exposure, stratified by tier and poison position.
+The primary RQ3 endpoint is paired $\Delta$SVR for D3 at 70\% coverage relative to D1 and D2, reported beside the Tier~3 benign-conflict false-flag rate (BFFR).
 
 \section{Results}
-\emph{Frozen results pending. No values are inserted before the benchmark review gate and final runs.}
+\input{generated_results.tex}
 
 \section{Discussion}
-The discussion will separate retrieval compromise, generation compromise, and out-of-range commitments.
-It will report the coverage ceiling and legitimate-conflict false flags of D3 rather than describing it as a complete poisoning defense.
+The study separates three failure stages that are often collapsed into one attack-success number.
+First, the poison must be retrieved.
+Second, the model must adopt it after exposure.
+Third, the committed value may or may not violate the benchmark's allowable interval.
+This decomposition matters because a defense can improve one stage while leaving another unchanged.
+
+The public-versus-asset-specific comparison is intended to test a practical asymmetry.
+Public-standard values may already be represented in model parameters, providing a competing prior when retrieved evidence is wrong.
+A fictional asset-specific setting has no such memorized fallback.
+Forced exposure is necessary to study this question because natural retrieval probability is itself item-dependent.
+
+System-of-record validation represents a domain-specific guardrail rather than a general poisoning solution.
+Its maximum benefit is capped by structured-record coverage, and its false flags expose a second limitation: legitimate documents can differ by jurisdiction or interconnection.
+A utility that validates every answer against a simplified global table can therefore reject correct context-specific information.
+The relevant engineering question is not whether a record check is perfect, but whether its measured reduction in out-of-range commitments justifies its coverage and conflict costs.
 
 \section{Limitations}
-The asset register is fictional, the study uses a limited model and retriever set, and no physical power-flow, protection, or thermal simulation is performed.
-The results therefore support benchmark-level answer-integrity claims only, not claims about physical grid safety or deployment resilience.
+GridPoison-100 is a controlled benchmark rather than a deployed utility corpus.
+Tier~2 uses a fictional asset register, one dense retriever is used for the main study, and only three model families are tested.
+The primary attacker is non-adaptive and cannot modify the structured record.
+No power-flow, protection, thermal, or transient simulation is performed, so the benchmark does not quantify physical consequences.
+The study also focuses on scalar factual lookups; procedural switching sequences and open-ended engineering judgment are outside scope.
+
+The public values were source-audited before generation.
+Independent power-engineer review is tracked separately and must not be claimed unless completed.
+Any benchmark change resulting from that review requires rerunning affected experiments.
 
 \section{Conclusion}
-Conclusions will be restricted to the preregistered endpoints and measured benchmark results.
+This work reframes RAG poisoning in utility operations as an answer-integrity measurement problem rather than as a new attack primitive.
+By separating retrieval exposure, conditional adoption, and consequence grading, GridPoison-100 makes it possible to distinguish where corruption enters the pipeline and what an independent record check actually buys under incomplete coverage.
+The conclusions are limited to the stated threat model, benchmark, retriever, and tested models.
 
 \section*{Generative AI Use Disclosure}
-Generative AI tools were used to assist with software scaffolding, literature triage, adversarial design review, and language editing. The authors independently verified cited sources, benchmark values, experimental design, code, statistical analysis, and all reported results, and remain fully responsible for the manuscript's accuracy, originality, and integrity.
+Generative AI tools were used to assist with software scaffolding, literature triage, adversarial design review, and language editing.
+The authors independently verified cited sources, benchmark values, experimental design, code, statistical analysis, and all reported results, and remain fully responsible for the manuscript's accuracy, originality, and integrity.
 
 \bibliographystyle{IEEEtran}
 \bibliography{references}
