@@ -1,0 +1,49 @@
+name: Build Paper PDF
+
+on:
+  push:
+    paths:
+      - "paper/**"
+      - "results/analysis_summary.json"
+      - "results/stage_a_summary.json"
+      - "scripts/render_paper_assets.py"
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+      - name: Render result tables when analysis exists
+        run: |
+          if [ -f results/analysis_summary.json ]; then
+            python scripts/render_paper_assets.py
+          fi
+      - uses: xu-cheng/latex-action@v3
+        with:
+          root_file: main.tex
+          working_directory: paper
+      - name: Copy named PDF
+        run: cp paper/main.pdf paper/GridPoisonRAG_NEECON2026.pdf
+      - name: Commit generated paper assets
+        run: |
+          git config user.name "gridpoisonrag-bot"
+          git config user.email "actions@users.noreply.github.com"
+          git add paper/generated_results.tex paper/GridPoisonRAG_NEECON2026.pdf
+          if git diff --cached --quiet; then
+            echo "No generated changes"
+          else
+            git commit -m "Build GridPoisonRAG NEECON paper PDF"
+            git pull --rebase origin main
+            git push origin HEAD:main
+          fi
+      - uses: actions/upload-artifact@v4
+        with:
+          name: GridPoisonRAG-NEECON2026-PDF
+          path: paper/GridPoisonRAG_NEECON2026.pdf
