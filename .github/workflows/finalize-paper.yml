@@ -1,0 +1,105 @@
+name: Finalize NEECON Paper
+
+on:
+  push:
+    paths:
+      - ".github/workflows/finalize-paper.yml"
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  finalize:
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+    env:
+      HF_TOKEN: ${{ secrets.HF_TOKEN }}
+      HF_HOME: /home/runner/.cache/huggingface
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: main
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+      - name: Restore Hugging Face model cache
+        uses: actions/cache@v4
+        with:
+          path: /home/runner/.cache/huggingface
+          key: ${{ runner.os }}-hf-all-MiniLM-L6-v2-v1
+      - name: Install analysis dependencies
+        run: |
+          python -m pip install -e ".[dev]"
+          python -m pip install pypdf
+      - name: Validate repository
+        run: |
+          python scripts/build_corpus.py
+          python scripts/validate_benchmark.py
+          pytest -q
+          git diff --exit-code -- corpus/
+      - name: Rerun frozen-candidate Stage A
+        run: |
+          python scripts/run_stage_a.py --variant out_of_range_plain --poison-count 1 --out results/stage_a_plain_1.jsonl
+          python scripts/run_stage_a.py --variant out_of_range_plain --poison-count 3 --out results/stage_a_plain_3.jsonl
+          python scripts/run_stage_a.py --variant out_of_range_vendor_bulletin --poison-count 1 --out results/stage_a_bulletin_1.jsonl
+          python scripts/summarize_stage_a.py \
+            results/stage_a_plain_1.jsonl \
+            results/stage_a_plain_3.jsonl \
+            results/stage_a_bulletin_1.jsonl \
+            --out results/stage_a_summary.json
+      - name: Recompute final statistics
+        shell: bash
+        run: |
+          set -euo pipefail
+          DIRS=(
+            "results/mistralai_mistral-small-3.2-24b-instruct"
+            "results/qwen_qwen3-8b"
+            "results/openai_gpt-5.6-luna"
+          )
+          for D in "${DIRS[@]}"; do
+            test -f "$D/main_b2_p3.jsonl" || (echo "Missing model results: $D" && exit 1)
+          done
+          FILES=$(find "${DIRS[@]}" -name '*.jsonl' -type f -print)
+          python scripts/statistical_report.py $FILES --out results/analysis_summary.json
+          python scripts/render_paper_assets.py
+          ! grep -q "Results pending" paper/generated_results.tex
+      - uses: xu-cheng/latex-action@v3
+        with:
+          root_file: main.tex
+          working_directory: paper
+      - name: Name PDF and enforce page limit
+        run: |
+          cp paper/main.pdf paper/GridPoisonRAG_NEECON2026.pdf
+          python - <<'PY'
+          from pypdf import PdfReader
+          p="paper/GridPoisonRAG_NEECON2026.pdf"
+          n=len(PdfReader(p).pages)
+          print(f"FINAL_PDF_PAGES={n}")
+          if n > 6:
+              raise SystemExit(f"NEECON limit exceeded: {n} pages > 6")
+          if n < 4:
+              raise SystemExit(f"NEECON full-paper minimum not met: {n} pages < 4")
+          PY
+      - name: Commit final analysis and paper
+        run: |
+          git config user.name "gridpoisonrag-bot"
+          git config user.email "actions@users.noreply.github.com"
+          git add \
+            results/stage_a_plain_1.jsonl \
+            results/stage_a_plain_3.jsonl \
+            results/stage_a_bulletin_1.jsonl \
+            results/stage_a_summary.json \
+            results/analysis_summary.json \
+            paper/generated_results.tex \
+            paper/GridPoisonRAG_NEECON2026.pdf
+          git commit -m "Finalize audited NEECON results and paper" || true
+          git pull --rebase origin main
+          git push origin HEAD:main
+      - uses: actions/upload-artifact@v4
+        with:
+          name: GridPoisonRAG-NEECON2026-final
+          path: |
+            paper/GridPoisonRAG_NEECON2026.pdf
+            results/analysis_summary.json
+            paper/generated_results.tex
