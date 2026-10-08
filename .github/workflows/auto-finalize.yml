@@ -1,4 +1,5 @@
 name: Auto Finalize Experiments
+# retrigger after secret configured
 
 on:
   push:
