@@ -15,10 +15,13 @@
 
 \begin{abstract}
 Retrieval-augmented generation (RAG) is increasingly considered for document-grounded technical lookup, but indexed repositories can contain low-trust contributions.
-Prior work has established that knowledge-base poisoning can steer RAG answers.
-We study a narrower operational question: when a legitimate utility staff member asks for a numeric fact, how often does a low-trust document cause the assistant to commit to an out-of-range value, and what does checking an independent system of record buy?
-We introduce GridPoison-100, a consequence-graded benchmark containing public-standard facts, asset-specific facts from a declared fictional utility register, and legitimate jurisdictional conflicts.
-The study decomposes attack success into retrieval exposure and conditional adoption, uses a forced-exposure control to compare public and asset-specific facts without retrieval-selection bias, and evaluates cautious prompting, isolate-then-aggregate evidence voting, and system-of-record validation under incomplete coverage.
+We study whether such documents can cause a legitimate utility assistant to commit to out-of-range numeric values and whether an independent system-of-record (SoR) check helps.
+GridPoison-100 combines 35 public-standard items, 45 fictional asset-specific items, and 20 legitimate-conflict items.
+Across Mistral Small 3.2, Qwen3-8B, and GPT-5.6 Luna, one-poison retrieval exposure at $k=5$ was 70.0\% for public items but 3.3\% for asset items; three poisons raised asset exposure to 76.7\%.
+Yet forced exposure produced 0\% exact attacker-value adoption and 0\% benchmark violations in every model/tier/position cell, with poison position instead changing whether models returned the correct value or declined to commit.
+Under the three-poison stress condition, SoR validation reduced benchmark-violation rate by 3.1--3.8 percentage points at 70\% coverage and 3.8--5.0 points at full coverage, while conditional benign-conflict false flags reached 43.6--45.7\% and 64.1--65.7\%, respectively.
+Holm-adjusted McNemar tests were non-significant.
+The results show why retrieval exposure, adoption, and consequence should be measured separately, and that broader record coverage trades violation reduction against false-flag cost.
 \end{abstract}
 
 \begin{IEEEkeywords}
@@ -139,27 +142,30 @@ Two query phrasings are repeated observations, not independent samples.
 All rate estimates receive 95\% cluster-bootstrap intervals over items with 2,000 resamples.
 Paired defense comparisons use exact McNemar tests with Holm correction.
 The primary RQ2 endpoint is attacker-value adoption under forced exposure, stratified by tier and poison position.
-The primary RQ3 endpoint is paired $\Delta$SVR for D3 at 70\% coverage relative to D1 and D2, reported beside the Tier~3 benign-conflict false-flag rate (BFFR).
+The primary RQ3 endpoint is paired $\Delta$SVR for D3 at 70\% coverage relative to D1 and D2.
+The Tier~3 benign-conflict false-flag rate (BFFR) is computed conditionally among trials for which clean RAG first returned the benchmark-correct context-specific answer; a D3 flag on that otherwise-correct answer counts as a false flag.
 
 \section{Results}
 \input{generated_results.tex}
 
 \section{Discussion}
-The study separates three failure stages that are often collapsed into one attack-success number.
-First, the poison must be retrieved.
-Second, the model must adopt it after exposure.
-Third, the committed value may or may not violate the benchmark's allowable interval.
-This decomposition matters because a defense can improve one stage while leaving another unchanged.
+The results separate three mechanisms that a single attack-success number would obscure.
+With one inserted document, retrieval exposure differed by more than an order of magnitude between the public and fictional asset tiers, yet exact attacker-value adoption remained low.
+Under forced exposure, no model adopted the attacker value in any tier/position cell.
+The planned RQ2 hypothesis of greater resistance for public facts is therefore not supported by attacker-value adoption in this design.
+Instead, passage position changed conflict handling: placing the poison last drove correct-answer retention to zero across all models and tiers, with models declining to commit rather than choosing the poison.
+This is a negative result for direct adoption but a positive reason to report non-commitment separately from correctness.
 
-The public-versus-asset-specific comparison is intended to test a practical asymmetry.
-Public-standard values may already be represented in model parameters, providing a competing prior when retrieved evidence is wrong.
-A fictional asset-specific setting has no such memorized fallback.
-Forced exposure is necessary to study this question because natural retrieval probability is itself item-dependent.
+The defense results also resist a simple \textit{more filtering is better} interpretation.
+Cautious prompting produced little change, and isolate-then-aggregate did not improve Mistral or GPT-5.6 Luna and increased Qwen's violation rate in the paired effect-size analysis.
+D3 behaved differently because it checks a separate structured source rather than asking the language model to reason harder over conflicting text.
+At 70\% and 100\% coverage its bootstrap $\Delta$SVR intervals were positive across all three models, but the corresponding Holm-adjusted McNemar tests were non-significant.
+We therefore treat the observed reductions as descriptive effect sizes, not confirmatory evidence of universal defense efficacy.
 
-System-of-record validation represents a domain-specific guardrail rather than a general poisoning solution.
-Its maximum benefit is capped by structured-record coverage, and its false flags expose a second limitation: legitimate documents can differ by jurisdiction or interconnection.
-A utility that validates every answer against a simplified global table can therefore reject correct context-specific information.
-The relevant engineering question is not whether a record check is perfect, but whether its measured reduction in out-of-range commitments justifies its coverage and conflict costs.
+The cost side is equally important.
+As record coverage increased, D3 rejected more correct jurisdiction- or interconnection-specific answers when the simplified record represented a generic alternative.
+Conditional BFFR reached roughly 44--46\% at 70\% coverage and 64--66\% at full coverage.
+For operational deployment, the design implication is not to maximize record coverage blindly, but to make record scope explicit and to route mismatches to verification rather than presenting the record as an oracle.
 
 \section{Limitations}
 GridPoison-100 is a controlled benchmark rather than a deployed utility corpus.
@@ -169,13 +175,16 @@ No power-flow, protection, thermal, or transient simulation is performed, so the
 The study also focuses on scalar factual lookups; procedural switching sequences and open-ended engineering judgment are outside scope.
 
 The public values were source-audited before generation.
-Independent power-engineer review is tracked separately and must not be claimed unless completed.
-Any benchmark change resulting from that review requires rerunning affected experiments.
+Because the conference schedule preceded completion of the external power-engineer review, generation used the committed source-audited candidate benchmark; the benchmark is therefore not described as engineer-validated.
+Any later review that changes a target value, applicability condition, allowable interval, or poison construction requires rerunning the affected experiments.
+The forced-exposure result also reflects a deliberately evidence-rich context with three clean same-item supports against one poison, so 0\% attacker-value adoption should not be generalized to weaker or noisier evidence settings.
 
 \section{Conclusion}
-This work reframes RAG poisoning in utility operations as an answer-integrity measurement problem rather than as a new attack primitive.
-By separating retrieval exposure, conditional adoption, and consequence grading, GridPoison-100 makes it possible to distinguish where corruption enters the pipeline and what an independent record check actually buys under incomplete coverage.
-The conclusions are limited to the stated threat model, benchmark, retriever, and tested models.
+GridPoison-100 shows that poisoning exposure, attacker-value adoption, and benchmark consequence are distinct events in utility-operations RAG.
+In this study, exposure could be high while exact attacker-value adoption remained low or zero, and forced exposure primarily changed whether models committed to an answer.
+A separate system-of-record check reduced observed out-of-range commitments as coverage increased, but it also produced substantial false flags when the record lacked legitimate contextual variants.
+The practical lesson is therefore conditional: structured validation can change the failure mode, but its value depends on record scope, coverage, and escalation policy rather than on coverage alone.
+The conclusions remain limited to the stated threat model, benchmark, retriever, and tested models.
 
 \section*{Generative AI Use Disclosure}
 Generative AI tools were used to assist with software scaffolding, literature triage, adversarial design review, and language editing.
