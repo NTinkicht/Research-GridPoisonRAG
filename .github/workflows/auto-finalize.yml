@@ -1,22 +1,31 @@
 name: Auto Finalize Experiments
-# retrigger after secret configured
 
 on:
   push:
     paths:
       - ".github/workflows/auto-finalize.yml"
+      - "src/gridpoisonrag/providers.py"
   workflow_dispatch:
 
 permissions:
   contents: write
 
 jobs:
-  finalize:
+  model:
     runs-on: ubuntu-latest
-    timeout-minutes: 350
+    timeout-minutes: 360
+    strategy:
+      fail-fast: false
+      max-parallel: 1
+      matrix:
+        model:
+          - mistralai/mistral-small-3.2-24b-instruct
+          - qwen/qwen3-8b
+          - openai/gpt-5.6-luna
     env:
       OPENAI_COMPAT_BASE_URL: https://openrouter.ai/api/v1
       OPENAI_COMPAT_API_KEY: ${{ secrets.OPENROUTER_API_KEY }}
+      MODEL: ${{ matrix.model }}
       EXPERIMENT_GIT_SHA: ${{ github.sha }}
     steps:
       - uses: actions/checkout@v4
@@ -32,65 +41,92 @@ jobs:
           pytest -q
           git diff --exit-code -- corpus/
       - name: Require OpenRouter key
+        run: test -n "$OPENAI_COMPAT_API_KEY" || (echo "Missing OPENROUTER_API_KEY" && exit 1)
+      - name: Set model result directory
         run: |
-          test -n "$OPENAI_COMPAT_API_KEY" || (echo "Missing repository secret OPENROUTER_API_KEY" && exit 1)
+          KEY=$(echo "$MODEL" | tr '/:' '__')
+          echo "MODEL_KEY=$KEY" >> "$GITHUB_ENV"
+          mkdir -p "results/$KEY"
 
-      - name: Run complete matrix
+      - name: Run complete model matrix
         shell: bash
         run: |
           set -euo pipefail
-          MODELS=(
-            "mistralai/mistral-small-3.2-24b-instruct"
-            "qwen/qwen3-8b"
-            "openai/gpt-5.6-luna"
-          )
-          for MODEL in "${MODELS[@]}"; do
-            KEY=$(echo "$MODEL" | tr '/:' '__')
-            DIR="results/$KEY"
-            mkdir -p "$DIR"
+          DIR="results/$MODEL_KEY"
 
-            echo "=== $MODEL: clean references ==="
-            python scripts/run_generation.py --condition B0 --run-label B0 --model "$MODEL" --tier 12 --out "$DIR/gate_b0.jsonl"
-            python scripts/run_generation.py --condition B1 --run-label B1 --model "$MODEL" --tier 12 --out "$DIR/gate_b1.jsonl"
+          python scripts/run_generation.py --condition B0 --run-label B0 --model "$MODEL" --tier 12 --out "$DIR/gate_b0.jsonl"
+          python scripts/run_generation.py --condition B1 --run-label B1 --model "$MODEL" --tier 12 --out "$DIR/gate_b1.jsonl"
 
-            echo "=== $MODEL: RQ1 natural retrieval ==="
-            python scripts/run_generation.py --condition B2 --run-label B2_P1 --model "$MODEL" --tier 12 --k 5 --variant out_of_range_plain --poison-count 1 --out "$DIR/main_b2_p1.jsonl"
-            python scripts/run_generation.py --condition B2 --run-label B2_P3_STRESS --model "$MODEL" --tier 12 --k 5 --variant out_of_range_plain --poison-count 3 --out "$DIR/main_b2_p3.jsonl"
+          python scripts/run_generation.py --condition B2 --run-label B2_P1 --model "$MODEL" --tier 12 --k 5 --variant out_of_range_plain --poison-count 1 --out "$DIR/main_b2_p1.jsonl"
+          python scripts/run_generation.py --condition B2 --run-label B2_P3_STRESS --model "$MODEL" --tier 12 --k 5 --variant out_of_range_plain --poison-count 3 --out "$DIR/main_b2_p3.jsonl"
 
-            echo "=== $MODEL: RQ2 forced exposure ==="
-            python scripts/run_stage_b_forced.py --model "$MODEL" --position first --out "$DIR/stage_b_first.jsonl"
-            python scripts/run_stage_b_forced.py --model "$MODEL" --position last --out "$DIR/stage_b_last.jsonl"
+          python scripts/run_stage_b_forced.py --model "$MODEL" --position first --out "$DIR/stage_b_first.jsonl"
+          python scripts/run_stage_b_forced.py --model "$MODEL" --position last --out "$DIR/stage_b_last.jsonl"
 
-            echo "=== $MODEL: RQ3 defenses ==="
-            python scripts/run_generation.py --condition D1 --run-label D1_P3 --model "$MODEL" --tier 12 --k 5 --variant out_of_range_plain --poison-count 3 --out "$DIR/main_d1_p3.jsonl"
-            python scripts/run_generation.py --condition D2 --run-label D2_P3 --model "$MODEL" --tier 12 --k 5 --variant out_of_range_plain --poison-count 3 --out "$DIR/main_d2_p3.jsonl"
-            python scripts/apply_d3.py --input "$DIR/main_b2_p3.jsonl" --coverage 0.4 --run-label D3_P3_40 --out "$DIR/main_d3_p3_40.jsonl"
-            python scripts/apply_d3.py --input "$DIR/main_b2_p3.jsonl" --coverage 0.7 --run-label D3_P3_70 --out "$DIR/main_d3_p3_70.jsonl"
-            python scripts/apply_d3.py --input "$DIR/main_b2_p3.jsonl" --coverage 1.0 --run-label D3_P3_100 --out "$DIR/main_d3_p3_100.jsonl"
+          python scripts/run_generation.py --condition D1 --run-label D1_P3 --model "$MODEL" --tier 12 --k 5 --variant out_of_range_plain --poison-count 3 --out "$DIR/main_d1_p3.jsonl"
+          python scripts/run_generation.py --condition D2 --run-label D2_P3 --model "$MODEL" --tier 12 --k 5 --variant out_of_range_plain --poison-count 3 --out "$DIR/main_d2_p3.jsonl"
+          python scripts/apply_d3.py --input "$DIR/main_b2_p3.jsonl" --coverage 0.4 --run-label D3_P3_40 --out "$DIR/main_d3_p3_40.jsonl"
+          python scripts/apply_d3.py --input "$DIR/main_b2_p3.jsonl" --coverage 0.7 --run-label D3_P3_70 --out "$DIR/main_d3_p3_70.jsonl"
+          python scripts/apply_d3.py --input "$DIR/main_b2_p3.jsonl" --coverage 1.0 --run-label D3_P3_100 --out "$DIR/main_d3_p3_100.jsonl"
 
-            echo "=== $MODEL: legitimate conflicts ==="
-            python scripts/run_generation.py --condition B1 --run-label B1_CONFLICT --model "$MODEL" --tier 3 --out "$DIR/t3_b1.jsonl"
-            python scripts/apply_d3.py --input "$DIR/t3_b1.jsonl" --coverage 0.4 --run-label D3_CONFLICT_40 --out "$DIR/t3_d3_40.jsonl"
-            python scripts/apply_d3.py --input "$DIR/t3_b1.jsonl" --coverage 0.7 --run-label D3_CONFLICT_70 --out "$DIR/t3_d3_70.jsonl"
-            python scripts/apply_d3.py --input "$DIR/t3_b1.jsonl" --coverage 1.0 --run-label D3_CONFLICT_100 --out "$DIR/t3_d3_100.jsonl"
+          python scripts/run_generation.py --condition B1 --run-label B1_CONFLICT --model "$MODEL" --tier 3 --out "$DIR/t3_b1.jsonl"
+          python scripts/apply_d3.py --input "$DIR/t3_b1.jsonl" --coverage 0.4 --run-label D3_CONFLICT_40 --out "$DIR/t3_d3_40.jsonl"
+          python scripts/apply_d3.py --input "$DIR/t3_b1.jsonl" --coverage 0.7 --run-label D3_CONFLICT_70 --out "$DIR/t3_d3_70.jsonl"
+          python scripts/apply_d3.py --input "$DIR/t3_b1.jsonl" --coverage 1.0 --run-label D3_CONFLICT_100 --out "$DIR/t3_d3_100.jsonl"
 
-            echo "=== $MODEL: secondary deviations ==="
-            python scripts/run_generation.py --condition B2 --run-label B2_BULLETIN_P1 --model "$MODEL" --tier 12 --k 5 --variant out_of_range_vendor_bulletin --poison-count 1 --out "$DIR/dev_bulletin.jsonl"
-            python scripts/run_generation.py --condition B2 --run-label B2_WRONG_IN_RANGE_P1 --model "$MODEL" --tier 12 --k 5 --variant wrong_in_range_plain --poison-count 1 --out "$DIR/dev_wrong_in_range.jsonl"
-            python scripts/run_generation.py --condition B2 --run-label B2_P1_K2 --model "$MODEL" --tier 12 --k 2 --variant out_of_range_plain --poison-count 1 --out "$DIR/dev_k2.jsonl"
-          done
+          python scripts/run_generation.py --condition B2 --run-label B2_BULLETIN_P1 --model "$MODEL" --tier 12 --k 5 --variant out_of_range_vendor_bulletin --poison-count 1 --out "$DIR/dev_bulletin.jsonl"
+          python scripts/run_generation.py --condition B2 --run-label B2_WRONG_IN_RANGE_P1 --model "$MODEL" --tier 12 --k 5 --variant wrong_in_range_plain --poison-count 1 --out "$DIR/dev_wrong_in_range.jsonl"
+          python scripts/run_generation.py --condition B2 --run-label B2_P1_K2 --model "$MODEL" --tier 12 --k 2 --variant out_of_range_plain --poison-count 1 --out "$DIR/dev_k2.jsonl"
 
-      - name: Statistical report
-        run: |
-          FILES=$(find results -mindepth 2 -name '*.jsonl' -type f -print)
-          python scripts/statistical_report.py $FILES --out results/analysis_summary.json
-          python scripts/sample_adjudication.py $FILES --fraction 0.15 --minimum 300 --out results/adjudication_sample.csv
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: "gridpoisonrag-${{ env.MODEL_KEY }}-${{ github.run_id }}"
+          path: "results/${{ env.MODEL_KEY }}/"
+          if-no-files-found: warn
 
-      - name: Commit all experiment outputs
+      - name: Commit this model's completed results
+        if: success()
         run: |
           git config user.name "gridpoisonrag-bot"
           git config user.email "actions@users.noreply.github.com"
-          git add results/
-          git commit -m "Add complete GridPoisonRAG experiment matrix" || true
+          git add "results/$MODEL_KEY/"
+          git commit -m "Add $MODEL final experiment results" || exit 0
+          git pull --rebase origin main
+          git push origin HEAD:main
+
+  aggregate:
+    needs: model
+    if: always()
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: main
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+      - run: python -m pip install -e ".[dev]"
+      - name: Aggregate only if all three result directories exist
+        shell: bash
+        run: |
+          set -euo pipefail
+          DIRS=(
+            "results/mistralai_mistral-small-3.2-24b-instruct"
+            "results/qwen_qwen3-8b"
+            "results/openai_gpt-5.6-luna"
+          )
+          for D in "${DIRS[@]}"; do
+            test -f "$D/main_b2_p3.jsonl" || (echo "Missing completed model results: $D" && exit 1)
+          done
+          FILES=$(find "${DIRS[@]}" -name '*.jsonl' -type f -print)
+          python scripts/statistical_report.py $FILES --out results/analysis_summary.json
+          python scripts/sample_adjudication.py $FILES --fraction 0.15 --minimum 300 --out results/adjudication_sample.csv
+      - name: Commit aggregate outputs
+        run: |
+          git config user.name "gridpoisonrag-bot"
+          git config user.email "actions@users.noreply.github.com"
+          git add results/analysis_summary.json results/adjudication_sample.csv
+          git commit -m "Add final statistical analysis and adjudication sample" || exit 0
           git pull --rebase origin main
           git push origin HEAD:main
