@@ -3,10 +3,12 @@ name: Build Paper PDF
 on:
   push:
     paths:
-      - "paper/**"
+      - "paper/main.tex"
+      - "paper/references.bib"
       - "results/analysis_summary.json"
       - "results/stage_a_summary.json"
       - "scripts/render_paper_assets.py"
+      - ".github/workflows/build-paper.yml"
   workflow_dispatch:
 
 permissions:
