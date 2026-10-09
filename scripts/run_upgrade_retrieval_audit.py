@@ -103,22 +103,47 @@ def dense_audit(items_by_id: dict[str, dict], clean: list[dict], poisons: list[d
     }
 
 
-def bm25_audit(items: list[dict], clean: list[dict], poisons: list[dict]) -> list[dict]:
+def bm25_audit(items: list[dict], clean: list[dict], poisons: list[dict]) -> tuple[list[dict], dict]:
     rows = []
+    clean_index = {d["doc_id"]: i for i, d in enumerate(clean)}
+    tie_queries = 0
+    clean_first_exposure = {2: 0, 5: 0}
+    poison_first_exposure = {2: 0, 5: 0}
+
     for item in items:
         poison = select_poisons(poisons, item["item_id"], "out_of_range_plain", 1)[0]
         docs = clean + [poison]
+        poison_idx = len(docs) - 1
+        twin_idx = clean_index[poison["paired_clean_doc_id"]]
         tokens = [d["text"].lower().split() for d in docs]
         index = BM25Okapi(tokens)
         for phrasing in ("formal", "field"):
             query = query_for(item, phrasing)
             scores = index.get_scores(query.lower().split())
-            order = sorted(range(len(docs)), key=lambda i: (-float(scores[i]), i))[:10]
-            top = [(rank + 1, float(scores[i]), docs[i]) for rank, i in enumerate(order)]
+            exact_twin_tie = abs(float(scores[poison_idx]) - float(scores[twin_idx])) <= 1e-12
+            tie_queries += int(exact_twin_tie)
+
+            clean_first_order = sorted(
+                range(len(docs)), key=lambda i: (-float(scores[i]), i)
+            )[:10]
+            poison_first_order = sorted(
+                range(len(docs)),
+                key=lambda i: (-float(scores[i]), 0 if i == poison_idx else 1, i),
+            )[:10]
+
+            for k in (2, 5):
+                clean_first_exposure[k] += int(poison_idx in clean_first_order[:k])
+                poison_first_exposure[k] += int(poison_idx in poison_first_order[:k])
+
+            top = [
+                (rank + 1, float(scores[i]), docs[i])
+                for rank, i in enumerate(clean_first_order)
+            ]
             row = {
                 "item_id": item["item_id"],
                 "tier": item["tier"],
                 "phrasing": phrasing,
+                "poison_clean_twin_exact_score_tie": exact_twin_tie,
                 "top10": [
                     {
                         "rank": rank,
@@ -139,7 +164,24 @@ def bm25_audit(items: list[dict], clean: list[dict], poisons: list[dict]) -> lis
                     if d.get("kind") != "poison" and d.get("item_id") == item["item_id"]
                 )
             rows.append(row)
-    return rows
+
+    sensitivity = {
+        "total_queries": len(rows),
+        "exact_poison_clean_twin_score_ties": tie_queries,
+        "locked_clean_first": {
+            "k2_exposed": clean_first_exposure[2],
+            "k5_exposed": clean_first_exposure[5],
+        },
+        "counterfactual_poison_first": {
+            "k2_exposed": poison_first_exposure[2],
+            "k5_exposed": poison_first_exposure[5],
+        },
+        "definition": (
+            "Poison-first changes only deterministic ordering among equal BM25 scores; "
+            "all scores, corpus contents, queries, and tokenization are unchanged."
+        ),
+    }
+    return rows, sensitivity
 
 
 def main() -> None:
@@ -151,10 +193,11 @@ def main() -> None:
     poisons = read_jsonl(ROOT / "corpus/poison_variants.jsonl")
 
     dense = dense_audit(items_by_id, clean, poisons)
-    bm25 = bm25_audit(items, clean, poisons)
+    bm25, bm25_tie_sensitivity = bm25_audit(items, clean, poisons)
     output = {
         "dense_reproduction": dense,
         "bm25_composition": bm25,
+        "bm25_tie_sensitivity": bm25_tie_sensitivity,
     }
 
     out = ROOT / "results" / "upgrade_retrieval_audit.json"
@@ -164,6 +207,7 @@ def main() -> None:
         "dense_rows_checked": dense["checked_generation_rows"],
         "rank_drift_count": dense["rank_drift_count"],
         "bm25_rows": len(bm25),
+        "bm25_tie_sensitivity": bm25_tie_sensitivity,
     }, indent=2))
     if dense["rank_drift_count"]:
         raise SystemExit("Dense retrieval rank drift detected; stop final-upgrade interpretation.")
