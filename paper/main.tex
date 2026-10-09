@@ -5,7 +5,13 @@
 \usepackage{graphicx}
 \usepackage{xurl}
 \usepackage{balance}
+\usepackage{etoolbox}
 \usepackage[hidelinks]{hyperref}
+
+\makeatletter
+\patchcmd{\abstract}{---}{: }{}{}
+\patchcmd{\IEEEkeywords}{---}{: }{}{}
+\makeatother
 
 \title{Does the Assistant Check the Record? Knowledge-Base Poisoning and System-of-Record Validation in Utility Operations RAG}
 
@@ -16,6 +22,7 @@ Email: ntinkicht@hct.ac.ae; halaqrabi@hct.ac.ae}
 }
 
 \begin{document}
+\bstctlcite{GridPoisonBSTControl}
 \maketitle
 
 \begin{abstract}
