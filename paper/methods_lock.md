@@ -167,3 +167,11 @@ An LLM judge may assist triage but cannot be the sole validation source.
 - Clean RAG below 80% Tier-2 CRR after retrieval debugging: do not interpret poisoning results.
 - If the generation schedule slips, reduce to two model families and cut D2 before cutting B0/B1/B2/D1/D3.
 - If both primary endpoints are null, reposition as a benchmark/negative-result paper rather than inventing a new headline.
+
+
+## Follow-up execution deviation (10 Oct 2026)
+
+- The locked follow-up named all three original model families. Qwen3-8B follow-up generation failed at the provider layer in workflow run 37928683708 (Stage C after successful commit-required and BM25 stages) and again in Qwen-only recovery run 37975803086. The original job log records repeated OpenRouter HTTP 429 responses followed by a 404 from the chat-completions endpoint. The old workflow skipped artifact staging after Stage C failed, so no partial Qwen follow-up result is reported. A durable failure record is committed at `paper/qwen_followup_failure_record.md`.
+- Gemini 2.5 Flash-Lite was added on 9 Oct 2026 as an exploratory backup after the Qwen failures and after the completed Mistral and Luna follow-up results were available. It used the identical locked prompts and context definitions plus a matched B2 baseline. It belongs to no locked family, and no locked verdict depends on it.
+- The BM25 sensitivity audit found that every minimal-pair poison tied exactly with its paired clean twin under the locked tokenization. A clean-first versus poison-first tie-order sensitivity is therefore reported as post hoc; the underlying scores, corpus, queries and tokenization are unchanged.
+- The OSHA consequence classifier initially compared the poisoned MAD with the movement allowance rather than the electrical component. The classifier was corrected in commit `a0a3f17`; only the corrected classification is reported.
