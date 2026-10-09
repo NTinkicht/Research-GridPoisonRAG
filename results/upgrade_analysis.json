@@ -172,6 +172,95 @@
     },
     "tier3_false_flag_policy": "Tier-3 hash coverage held fixed so the what-if changes only poisonable-record selection."
   },
+  "empty_output_audit": {
+    "qwen_qwen3-8b": {
+      "B2_P1": {
+        "n": 160,
+        "empty": 0
+      },
+      "STAGE_B_FIRST": {
+        "n": 80,
+        "empty": 0
+      },
+      "STAGE_B_LAST": {
+        "n": 80,
+        "empty": 0
+      },
+      "STAGE_C": null
+    },
+    "mistralai_mistral-small-3.2-24b-instruct": {
+      "B2_P1": {
+        "n": 160,
+        "empty": 0
+      },
+      "STAGE_B_FIRST": {
+        "n": 80,
+        "empty": 0
+      },
+      "STAGE_B_LAST": {
+        "n": 80,
+        "empty": 0
+      },
+      "STAGE_C": {
+        "C0": {
+          "n": 80,
+          "empty": 0
+        },
+        "C1": {
+          "n": 80,
+          "empty": 0
+        },
+        "C2": {
+          "n": 80,
+          "empty": 0
+        },
+        "C3": {
+          "n": 80,
+          "empty": 0
+        },
+        "C4": {
+          "n": 80,
+          "empty": 0
+        }
+      }
+    },
+    "openai_gpt-5.6-luna": {
+      "B2_P1": {
+        "n": 160,
+        "empty": 1
+      },
+      "STAGE_B_FIRST": {
+        "n": 80,
+        "empty": 4
+      },
+      "STAGE_B_LAST": {
+        "n": 80,
+        "empty": 0
+      },
+      "STAGE_C": {
+        "C0": {
+          "n": 80,
+          "empty": 0
+        },
+        "C1": {
+          "n": 80,
+          "empty": 0
+        },
+        "C2": {
+          "n": 80,
+          "empty": 2
+        },
+        "C3": {
+          "n": 80,
+          "empty": 2
+        },
+        "C4": {
+          "n": 80,
+          "empty": 0
+        }
+      }
+    }
+  },
   "models": {
     "mistralai_mistral-small-3.2-24b-instruct": {
       "display_name": "Mistral Small 3.2",
@@ -182,6 +271,12 @@
         "base_to_new_A": 22,
         "A_to_new_nonA": 0,
         "paired_exact_p": 4.76837158203125e-07,
+        "n_items": 31,
+        "base_item_adoption": 2,
+        "new_item_adoption": 18,
+        "item_base_to_new_A": 16,
+        "item_A_to_new_nonA": 0,
+        "item_paired_exact_p": 3.0517578125e-05,
         "conversions": {
           "A->A": 2,
           "C->C": 1,
@@ -192,6 +287,8 @@
         "commit_adoption_pct": 48.97959183673469,
         "commit_adoption_exact_lo95_pct": 34.4247423087561,
         "commit_adoption_exact_hi95_pct": 63.66217418612698,
+        "commit_adoption_cluster_lo95_pct": 33.33333333333333,
+        "commit_adoption_cluster_hi95_pct": 64.44791666666664,
         "interpretation": "material prompt mediation supported",
         "commit_exposed_empty": 0,
         "commit_exposed_nonempty": 49,
@@ -292,6 +389,12 @@
         "base_to_new_A": 6,
         "A_to_new_nonA": 0,
         "paired_exact_p": 0.03125,
+        "n_items": 31,
+        "base_item_adoption": 2,
+        "new_item_adoption": 8,
+        "item_base_to_new_A": 6,
+        "item_A_to_new_nonA": 0,
+        "item_paired_exact_p": 0.03125,
         "conversions": {
           "A->A": 2,
           "C->C": 3,
@@ -302,6 +405,8 @@
         "commit_adoption_pct": 16.3265306122449,
         "commit_adoption_exact_lo95_pct": 7.322275990798831,
         "commit_adoption_exact_hi95_pct": 29.657135799975965,
+        "commit_adoption_cluster_lo95_pct": 7.543675751222921,
+        "commit_adoption_cluster_hi95_pct": 26.53061224489796,
         "interpretation": "partial prompt mediation",
         "commit_exposed_empty": 12,
         "commit_exposed_nonempty": 37,
@@ -402,6 +507,12 @@
         "base_to_new_A": 19,
         "A_to_new_nonA": 1,
         "paired_exact_p": 4.00543212890625e-05,
+        "n_items": 31,
+        "base_item_adoption": 3,
+        "new_item_adoption": 16,
+        "item_base_to_new_A": 14,
+        "item_A_to_new_nonA": 1,
+        "item_paired_exact_p": 0.0009765625,
         "conversions": {
           "A->A": 2,
           "A->C": 1,
@@ -413,6 +524,8 @@
         "commit_adoption_pct": 42.857142857142854,
         "commit_adoption_exact_lo95_pct": 28.819522424762983,
         "commit_adoption_exact_hi95_pct": 57.78959479640968,
+        "commit_adoption_cluster_lo95_pct": 28.300861361771943,
+        "commit_adoption_cluster_hi95_pct": 57.149470899470856,
         "interpretation": "material prompt mediation supported",
         "commit_exposed_empty": 0,
         "commit_exposed_nonempty": 49,
