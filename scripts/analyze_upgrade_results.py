@@ -186,7 +186,7 @@ def write_tex(summary: dict) -> None:
     with_clean = dense_ref["one_or_more_clean_same_item"]
 
     lines = [
-        r"\\subsection{Prospective Follow-up and Exploratory Backup}",
+        r"\subsection{Prospective Follow-up and Exploratory Backup}",
         (
             "After the original Qwen/Mistral/Luna results were frozen, we locked four follow-up checks "
             "before running them. Qwen's follow-up runs did not complete because of repeated provider-layer "
@@ -195,7 +195,7 @@ def write_tex(summary: dict) -> None:
             "a pre-specified model, and no locked verdict depends on it."
         ),
         "",
-        r"\\emph{Design.} "
+        r"\emph{Design.} "
         "(i) A retrieval audit reran the frozen dense retriever and logged the top-10 documents. "
         "(ii) A commit-required prompt removed permission to abstain and required one best numeric VALUE. "
         "It reused the one-poison $k=5$ setting; CAR is evaluated on the same 49 exposed Tier~1 trials "
@@ -254,16 +254,16 @@ def write_tex(summary: dict) -> None:
     )
 
     lines += [
-        r"\\begin{table}[t]",
-        r"\\centering",
-        r"\\caption{Follow-up controls (counts). Commit: attacker adoptions among 49 exposed Tier~1 trials under the commit-required prompt (base prompt: 2, 2, and 3). BM25: adoptions among trials exposed at $k=5$ under the locked corpus-order tie rule. C1--C4: adoptions out of 80 forced-context trials. Gemini 2.5 Flash-Lite is exploratory.}",
-        r"\\label{tab:upgrade-controls}",
-        r"\\footnotesize",
-        r"\\setlength{\\tabcolsep}{3.5pt}",
-        r"\\begin{tabular}{lrrrrrr}",
-        r"\\toprule",
-        r"Model & Commit & BM25 & C1 & C2 & C3 & C4 \\\\",
-        r"\\midrule",
+        r"\begin{table}[t]",
+        r"\centering",
+        r"\caption{Follow-up controls (counts). Commit: attacker adoptions among 49 exposed Tier~1 trials under the commit-required prompt (base prompt: 2, 2, and 3). BM25: adoptions among trials exposed at $k=5$ under the locked corpus-order tie rule. C1--C4: adoptions out of 80 forced-context trials. Gemini 2.5 Flash-Lite is exploratory.}",
+        r"\label{tab:upgrade-controls}",
+        r"\footnotesize",
+        r"\setlength{\tabcolsep}{3.5pt}",
+        r"\begin{tabular}{lrrrrrr}",
+        r"\toprule",
+        r"Model & Commit & BM25 & C1 & C2 & C3 & C4 \\",
+        r"\midrule",
     ]
     for key, label in FOLLOWUP_MODELS.items():
         m = models[key]
@@ -278,9 +278,9 @@ def write_tex(summary: dict) -> None:
             f"{m['stage_c']['C4']['adoption_count']} \\\\"
         )
     lines += [
-        r"\\bottomrule",
-        r"\\end{tabular}",
-        r"\\end{table}",
+        r"\bottomrule",
+        r"\end{tabular}",
+        r"\end{table}",
         "",
     ]
 
