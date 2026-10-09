@@ -4,8 +4,10 @@ on:
   push:
     paths:
       - "paper/main.tex"
+      - "paper/upgrade_followup.tex"
       - "paper/references.bib"
       - "results/analysis_summary.json"
+      - "results/upgrade_analysis.json"
       - "results/stage_a_summary.json"
       - "scripts/render_paper_assets.py"
       - ".github/workflows/build-paper.yml"
