@@ -1,0 +1,40 @@
+name: Existing-Data Final Upgrade
+
+on:
+  push:
+    paths:
+      - ".github/workflows/existing-data-upgrade.yml"
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+concurrency:
+  group: existing-data-final-upgrade
+  cancel-in-progress: true
+
+jobs:
+  analyze:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+      - name: Install project
+        run: python -m pip install -e .
+      - name: Run existing-data upgrade
+        run: python scripts/run_existing_data_upgrade.py
+      - name: Commit result
+        run: |
+          git config user.name "gridpoisonrag-bot"
+          git config user.email "actions@users.noreply.github.com"
+          git add results/existing_data_upgrade.json
+          if git diff --cached --quiet; then
+            echo "No existing-data changes to commit"
+            exit 0
+          fi
+          git commit -m "Add consequence and severity-prioritized D3 results"
+          git pull --rebase origin main
+          git push origin HEAD:main
