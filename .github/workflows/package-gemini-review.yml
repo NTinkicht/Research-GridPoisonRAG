@@ -20,8 +20,7 @@ jobs:
         with:
           python-version: "3.11"
       - name: Refresh generated result text
-        run: |
-          python scripts/render_paper_assets.py
+        run: python scripts/render_paper_assets.py
       - name: Assemble review package
         shell: bash
         run: |
@@ -48,24 +47,24 @@ jobs:
             echo "=== ACCEPTANCE-LEVEL REFRAMING / EXPOSED-TRIAL ANALYSIS ==="
             git show --stat --summary 281ca64 || true
           } > "$ROOT/GIT_KEY_COMMITS.txt"
-          cat > "$ROOT/README_FOR_GEMINI.txt" <<'EOF'
-GridPoisonRAG hostile-review package
-====================================
-
-Authoritative repository state: see GIT_HEAD.txt.
-The final compiled PDF is supplied separately in this package by the review-package assembler.
-The repository/ directory contains manuscript sources, methods lock, benchmark,
-corpus, configurations, code, raw JSONL outputs, generated analysis, and CI workflows.
-
-Review the attached materials rather than attempting to clone GitHub.
-Where a claim requires a live external standard/source that is not embedded,
-mark only that verification as externally unavailable; do not refuse the full review.
-
-Target scores to analyze:
-Validity 9 | Novelty 8 | Experimental Design 8 | Power Systems 8 |
-Benchmark 8 | Practical Utility 9 | Statistics 8.5 | Reproducibility 9 |
-Presentation 8.5 | NEECON Fit 9 | Overall 8.5-9.
-EOF
+          printf '%s\n' \
+            'GridPoisonRAG hostile-review package' \
+            '====================================' \
+            '' \
+            'Authoritative repository state: see GIT_HEAD.txt.' \
+            'The final compiled PDF is supplied separately in this package by the review-package assembler.' \
+            'The repository/ directory contains manuscript sources, methods lock, benchmark,' \
+            'corpus, configurations, code, raw JSONL outputs, generated analysis, and CI workflows.' \
+            '' \
+            'Review the attached materials rather than attempting to clone GitHub.' \
+            'Where a claim requires a live external standard/source that is not embedded,' \
+            'mark only that verification as externally unavailable; do not refuse the full review.' \
+            '' \
+            'Target scores to analyze:' \
+            'Validity 9 | Novelty 8 | Experimental Design 8 | Power Systems 8 |' \
+            'Benchmark 8 | Practical Utility 9 | Statistics 8.5 | Reproducibility 9 |' \
+            'Presentation 8.5 | NEECON Fit 9 | Overall 8.5-9.' \
+            > "$ROOT/README_FOR_GEMINI.txt"
           find "$ROOT" -type f | sort > "$ROOT/MANIFEST.txt"
       - uses: actions/upload-artifact@v4
         with:
