@@ -68,10 +68,10 @@ def consequence_row(item: dict) -> dict:
         electrical = value - movement
         if poison >= value:
             category = "at_or_above_full_mad"
-        elif poison >= movement:
-            category = "electrical_component_consumed"
+        elif poison >= electrical:
+            category = "movement_allowance_consumed"
         else:
-            category = "movement_allowance_crossed"
+            category = "inside_electrical_component"
         gap_fraction = max(0.0, value - poison) / value
         return {
             **base,
@@ -80,6 +80,7 @@ def consequence_row(item: dict) -> dict:
             "electrical_component_m": electrical,
             "poison_vs_full_mad_m": poison - value,
             "poison_vs_movement_allowance_m": poison - movement,
+            "poison_vs_electrical_component_m": poison - electrical,
             "mad_consequence": category,
             "severity_proxy": gap_fraction,
             "severity_proxy_definition": "fractional reduction from benchmark minimum approach distance",
