@@ -16,5 +16,11 @@ jobs:
       - run: python scripts/build_corpus.py
       - run: git diff --exit-code -- corpus/
       - run: python scripts/validate_benchmark.py
+      - name: Regenerate paper assets
+        run: |
+          python scripts/render_paper_assets.py
+          python scripts/analyze_upgrade_results.py
+      - name: Verify generated paper assets are current
+        run: git diff --exit-code -- paper/ results/upgrade_analysis.json
       - run: python -m compileall -q scripts src
       - run: pytest -q
