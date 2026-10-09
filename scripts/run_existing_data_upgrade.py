@@ -1,7 +1,7 @@
 from __future__ import annotations
 
+import hashlib
 import json
-import math
 from pathlib import Path
 import sys
 
@@ -12,7 +12,11 @@ from gridpoisonrag.defenses import validate_against_record
 from gridpoisonrag.grading import grade_answer
 from gridpoisonrag.io import read_jsonl
 
-from scripts.apply_d3 import covered as hash_covered
+
+
+def hash_covered(item_id: str, coverage: float) -> bool:
+    bucket = int(hashlib.sha256(item_id.encode()).hexdigest()[:8], 16) / 0xFFFFFFFF
+    return bucket < coverage
 
 
 MODEL_KEYS = [
