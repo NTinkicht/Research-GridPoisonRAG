@@ -4,6 +4,7 @@ on:
   push:
     paths:
       - ".github/workflows/existing-data-upgrade.yml"
+      - "scripts/run_existing_data_upgrade.py"
   workflow_dispatch:
 
 permissions:
