@@ -3,7 +3,7 @@ Clean-RAG CRR was 87.8\% on Tier~2 (pre-specified threshold: 80\%) and 75.7--78.
 \subsection{Natural-retrieval behavior (RQ1)}
 Table~\ref{tab:natural} reports retrieval exposure and generation outcomes. Exposure is deterministic for the shared retriever; CRR and CAR are ranges across models.
 \begin{table*}[t]
-\caption{Natural-retrieval outcomes (\%; $k=5$ unless noted).}
+\caption{Natural-retrieval outcomes (\%; $k=5$ unless noted). CAR is conditional on exposure; exposed Tier~1/Tier~2 trials per model are 49/3 (1 poison), 49/69 (3 poisons), 47/7 (bulletin), and 26/3 ($k=2$).}
 \label{tab:natural}
 \centering
 \scriptsize
@@ -21,7 +21,8 @@ Clean RAG & -- & 75.7--78.6\% & -- & -- & 87.8\% & -- \\
 \bottomrule
 \end{tabular}
 \end{table*}
-At $k=5$, one poison was retrieved in 49 Tier~1 trials per model; only 0--3 remained correct, while direct attacker adoption was 4.1\% of exposed trials. Reducing retrieval depth to $k=2$ changed the evidence balance: all three models adopted the attacker value in 9 of 26 exposed Tier~1 trials (CAR 34.6\%). The wrong-but-in-range poison was copied in only 1--2 of 35 exposed trials per model.
+At $k=5$, one poison was retrieved in 49 Tier~1 trials per model; only 0--3 remained correct, while direct attacker adoption was 4.1\% of exposed trials. In the pre-specified secondary $k=2$ condition, all three models adopted the attacker value in the same 9 of 26 exposed Tier~1 trials (CAR 34.6\%).
+The wrong-but-in-range poison was copied in only 1--2 of 35 exposed trials per model.
 \subsection{Fixed-context exposure (RQ2)}
 In the evidence-rich fixed context (three clean same-item supports, one distractor, one poison), attacker-value adoption and BVR were 0\% in every model/tier/position cell. With zero events, the exact 95\% upper bounds on per-item adoption are 10.0\% for Tier~1 ($n=35$) and 7.9\% for Tier~2 ($n=45$). Table~\ref{tab:rq2} reports correct-answer retention.
 \begin{table}[t]
@@ -43,7 +44,7 @@ Every poison-last trial produced no numeric commitment. Because the base prompt 
 \subsection{Record-check accounting (RQ3)}
 The locked primary comparison is D3 at 70\% coverage versus D1 and D2. Table~\ref{tab:rq3} reports paired BVR reduction in percentage points; positive values favor D3.
 \begin{table*}[t]
-\caption{Primary RQ3 comparison and violation counts. Brackets are 95\% item-cluster bootstrap intervals.}
+\caption{Primary RQ3 comparison and violation counts. Brackets are descriptive 95\% item-cluster bootstrap intervals of trial-level BVR differences; McNemar tests count an item as violating only when both phrasings violate.}
 \label{tab:rq3}
 \centering
 \scriptsize
@@ -58,9 +59,9 @@ GPT-5.6 Luna & 3.8 [0.6, 7.5] & 3.8 [0.0, 8.8] & 8 $\rightarrow$ 2 & 0 \\
 \bottomrule
 \end{tabular}
 \end{table*}
-Against vanilla poisoned RAG, D3@70 removed 6/7, 5/6, and 6/8 violating trials for Mistral, Qwen, and GPT-5.6 Luna, respectively, and full coverage removed all of them. D2 increased Qwen BVR by 3.1 points relative to B2. Only 5--8 trials violated per model and the primary McNemar comparisons had at most 3 discordant items; all six Holm-adjusted tests therefore remained non-significant ($p_{\mathrm{Holm}}=1.0$). The defense comparisons are descriptive.
+Against B2, which uses the same conflict-abstaining base prompt, D3@70 removed 6/7, 5/6, and 6/8 violating trials for Mistral, Qwen, and GPT-5.6 Luna, respectively; full coverage removed the remaining violations by construction. D2 increased Qwen BVR by 3.1 points relative to B2. Violating trials per model were 6--8 under B2, 5--8 under D1, 7--11 under D2, and 1--2 under D3@70. The primary McNemar comparisons had at most 3 discordant items and all six Holm-adjusted tests were non-significant ($p_{\mathrm{Holm}}=1.0$). The defense comparisons are descriptive.
 \subsection{Legitimate-conflict cost}
-The structured record equals the benchmark target for 78/80 poisonable items, but intentionally stores a generic alternative for 13/20 Tier~3 items. BFFR therefore measures a controlled record-scope gap and is conditioned on clean-RAG correctness.
+Clean RAG answered 35--39 of 40 legitimate-conflict trials correctly. The structured record equals the benchmark target for 78/80 poisonable items, but intentionally stores a generic alternative for 13/20 Tier~3 items. BFFR therefore measures a controlled record-scope gap and is conditioned on clean-RAG correctness.
 \begin{table}[t]
 \caption{Conditional benign-conflict false-flag rate (BFFR).}
 \label{tab:bffr}
