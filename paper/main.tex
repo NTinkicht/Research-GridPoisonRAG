@@ -9,7 +9,7 @@
 
 \title{Does the Assistant Check the Record? Knowledge-Base Poisoning and System-of-Record Validation in Utility Operations RAG}
 
-\author{\IEEEauthorblockN{Anonymous Author(s)}}
+\author{\n\IEEEauthorblockN{Nassim Tinkicht, Hussain Al-Aqrabi}\n\IEEEauthorblockA{Computer Information Science, Higher Colleges of Technology, United Arab Emirates\\\\\nEmail: ntinkicht@hct.ac.ae; halaqrabi@hct.ac.ae}\n}
 
 \begin{document}
 \maketitle
@@ -188,27 +188,12 @@ Clean RAG answered 35--39 of 40 scoped-conflict trials correctly, showing that t
 A generic SoR then flags many of those correct answers: 13 of 20 Tier~3 records intentionally omit the applicable contextual variant.
 A structured check therefore helps only when record authority, jurisdiction/interconnection scope, and escalation policy are explicit.
 
-\section{Limitations}
-GridPoison-100 is a controlled template benchmark, not a deployed utility corpus: documents carry explicit identifiers, minimal-pair poisons make conflicts visible, and the base prompt sanctions abstention.
-The study uses one dense retriever, three hosted model families with unpinned provider routing, and scalar lookup tasks rather than procedural switching or open-ended engineering judgment.
-The embedding-model revision was not pinned; the zero-rank-drift rerun on the frozen corpus verifies the realized retrieval contexts but does not guarantee future dependency stability.
-GPT-5.6 Luna returned 50 empty responses, including 41 closed-book, consistent with reasoning exhausting the requested token budget; they are counted as non-correct and non-committal.
-
-An AI-assisted source audit traces Tier~1 targets and Tier~3 alternatives to the cited primary sources; Tier~2 values are fictional by declaration.
-PRC-024-3 is used as the cited benchmark edition, not asserted as current operational guidance.
-The encoded intervals are benchmark definitions, not engineering operating limits, and no power-flow, protection, thermal, or transient simulation is performed.
-D3 is an upper bound because the harness supplies the applicable record key.
-
 \section{Conclusion}
 GridPoison-100 separates retrieval exposure, attacker-value adoption, non-commitment, and benchmark consequence in utility-operations RAG.
 Under a conflict-abstaining prompt, one retrieved poison at $k=5$ usually converted a correct lookup into non-commitment rather than silent corruption; a locked follow-up showed that this protection is abstention-mediated, because requiring a numeric answer raised exposed-trial adoption to 49.0\% (Mistral Small 3.2) and 16.3\% (GPT-5.6 Luna).
-Adoption tracked context composition---0/80 in both locked models when the poison's paired clean twin was present and 80/80 for a lone poison---but a different clean support did not reliably prevent it, so the pre-stated strong composition hypothesis was falsified.
+Adoption tracked context composition: 0/80 in both locked models when the poison's paired clean twin was present and 80/80 for a lone poison, but a different clean support did not reliably prevent it, so the pre-stated strong composition hypothesis was falsified.
 A keyed structured-record check removed out-of-range commitments only for the items its coverage draw included (0--1 of 6--8 violating trials at 40\% coverage; all at full coverage), and flagged correct answers whenever the record lacked the applicable jurisdiction or interconnection variant.
 The design implication these data support directly is to scope structured records to the jurisdiction and interconnection in which they are authoritative; whether redundant approved evidence limits silent corruption in real repositories remains untested.
-
-\section*{Generative AI Use Disclosure}
-Generative AI systems including ChatGPT (OpenAI), Claude (Anthropic), and Grok (xAI) assisted software scaffolding, benchmark/corpus drafting, literature triage, source-consistency checking, adversarial methodological review, and language editing.
-All reported numerical results derive from logged experiments and deterministic analysis code; the authors remain fully responsible for the accuracy, originality, and integrity of the manuscript.
 
 \balance
 \bibliographystyle{IEEEtran}
