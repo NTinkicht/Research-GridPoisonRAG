@@ -4,6 +4,7 @@ on:
   push:
     paths:
       - ".github/workflows/upgrade-retrieval-audit.yml"
+      - "scripts/run_upgrade_retrieval_audit.py"
   workflow_dispatch:
 
 permissions:
