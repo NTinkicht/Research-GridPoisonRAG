@@ -1,0 +1,40 @@
+name: Analyze Final Upgrade
+
+on:
+  push:
+    paths:
+      - "results/**/upgrade_*.jsonl"
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+concurrency:
+  group: analyze-final-upgrade
+  cancel-in-progress: true
+
+jobs:
+  analyze:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+      - name: Install project
+        run: python -m pip install -e .
+      - name: Analyze upgrade controls
+        run: python scripts/analyze_upgrade_results.py
+      - name: Commit analysis and paper insert
+        run: |
+          git config user.name "gridpoisonrag-bot"
+          git config user.email "actions@users.noreply.github.com"
+          git add results/upgrade_analysis.json paper/upgrade_followup.tex paper/main.tex
+          if git diff --cached --quiet; then
+            echo "No upgrade-analysis changes to commit"
+            exit 0
+          fi
+          git commit -m "Analyze final-upgrade controls"
+          git pull --rebase origin main
+          git push origin HEAD:main
