@@ -18,11 +18,11 @@
 Retrieval-augmented generation (RAG) enables document-grounded technical lookup, but indexed repositories may accept low-trust contributions.
 We study targeted numeric answer-integrity corruption in utility-operations RAG with GridPoison-100: 35 source-grounded public items, 45 fictional asset-register items, and 20 legitimate-conflict items.
 The two pre-specified primary tests were null: fixed-context forced exposure produced 0\% attacker-value adoption in both tiers, and a keyed system-of-record (SoR) check at 70\% coverage did not significantly outperform a cautious prompt or isolate-then-aggregate voting (all Holm-adjusted $p=1.0$).
-Descriptive natural-retrieval analysis shows a different operational effect.
-Under a base prompt that returns \texttt{VALUE: UNKNOWN} on unresolved conflict, one poison at $k=5$ reached 70.0\% of public-item queries; among exposed trials CAR was 4.1\%, while Tier~1 CRR fell from 75.7--78.6\% to 8.6--12.9\%, primarily through non-commitment.
-In the pre-specified secondary $k=2$ condition, CAR rose to 34.6\% on the same 9 of 26 exposed trials for all three models.
-D3 is an upper-bound keyed record check: full coverage removed observed out-of-range commitments by construction, but flagged 64.1--65.7\% of otherwise-correct legitimate-conflict answers because 13 of 20 conflict records held generic profiles.
-The results locate answer-integrity risk in retrieval composition and record scope, not model choice alone.
+In post-hoc descriptive analysis under a base prompt that returns \texttt{VALUE: UNKNOWN} on unresolved conflict, one poison at $k=5$ reached 70.0\% of public-item queries; Tier~1 CRR fell from 75.7--78.6\% to 8.6--12.9\%, mostly through non-commitment, and CAR among exposed trials was 4.1\%.
+In the pre-specified secondary $k=2$ condition, CAR was 34.6\% on the same 9 of 26 exposed trials for all three models.
+Locked follow-up controls showed that this non-commitment was abstention-mediated: when a numeric answer was required, CAR rose to 49.0\% (Mistral Small 3.2) and 16.3\% (GPT-5.6 Luna).
+In forced two-passage contexts, the poison's clean twin suppressed adoption and a lone poison was always adopted, but a different clean support left 17 of 80 adoptions for Mistral, falsifying the pre-stated strong composition hypothesis.
+D3 is an upper-bound keyed record check: full coverage removed observed out-of-range commitments by construction but flagged 64.1--65.7\% of otherwise-correct legitimate-conflict answers because 13 of 20 conflict records held generic profiles.
 \end{abstract}
 
 \begin{IEEEkeywords}
@@ -53,11 +53,13 @@ The contributions are fourfold:
 \section{Related Work}
 PoisonedRAG showed that a small number of attacker-controlled texts can steer retrieval-augmented models toward targeted answers~\cite{zou2025poisonedrag}.
 Subsequent work has examined retrieval, database, and generator factors that influence poisoning exposure and attack success~\cite{pereira2026influence}.
-Blocker documents can also jam RAG systems into declining to answer~\cite{shafran2025jamming}; the non-commitment observed here is related but arises from a conflict-abstention rule rather than an attacker objective.
+Blocker documents can also jam RAG systems into declining to answer~\cite{shafran2025jamming}; the non-commitment observed here is related but arises from the assistant's own conflict-abstention rule rather than an attacker objective.
+Our commit-required follow-up directly tests that distinction by removing permission to abstain.
 Because those effects are already known, retrieval depth is a secondary factor here rather than a novelty claim.
 
 RobustRAG introduced an isolate-then-aggregate strategy for retrieval corruption~\cite{xiang2024robustrag}; we use this family as a generic defense baseline rather than presenting it as new.
 ClashEval quantified conflicts between parametric knowledge and retrieved evidence~\cite{wu2024clasheval}.
+Controlled knowledge-conflict work also shows that model behavior can change sharply depending on how conflicting external evidence is composed~\cite{xie2024chameleon}, motivating our paired-twin versus non-paired-support Stage~C control.
 Other work has shown that evidence phrasing, publication time, and metadata can affect model preferences~\cite{wan2024evidence,chiang2024metadata}.
 These findings motivate our vendor-bulletin condition but also rule out treating authority framing as a primary contribution.
 
@@ -144,16 +146,17 @@ We report Poison@$k$, attack success rate (ASR), conditional adoption rate (CAR)
 \mathrm{CAR}=P(A\mid E_t=1),
 \end{equation}
 \begin{equation}
-\mathrm{BVR}=\frac{1}{|T|}\sum_t \mathbb{1}[\hat v_t \notin [L_i,U_i]].
+\mathrm{BVR}=\frac{1}{|T|}\sum_t \mathbb{1}[\hat v_t \notin [L_{i(t)},U_{i(t)}]].
 \end{equation}
 BVR counts only committed numeric values; non-committal outputs are non-violations by definition, so BVR is reported together with CRR.
 It is a benchmark consequence metric, not a physical grid-safety measure.
 
 The item is the unit of analysis and the two query phrasings are repeated observations.
-Defense differences receive paired 95\% item-cluster bootstrap intervals with 2,000 resamples; natural-retrieval CAR intervals use item-cluster resampling, and zero-event Stage-B adoption cells receive exact Clopper--Pearson bounds.
+Defense differences receive paired 95\% item-cluster bootstrap intervals with 2,000 resamples; natural-retrieval CAR intervals use exact Clopper--Pearson intervals over exposed trials, and zero-event Stage-B adoption cells receive exact Clopper--Pearson bounds.
 The locked primary RQ3 comparison is D3 at 70\% coverage versus D1 and D2.
 Paired comparisons use item-level exact McNemar tests, with an item counted as violating only when both phrasings violate, and Holm correction over the six primary comparisons; comparisons with B2 are secondary and descriptive.
 Tier~3 BFFR is conditioned on clean-RAG correctness so D3 is charged only when it flags an otherwise-correct context-specific answer.
+This conditioning is a post-hoc refinement; unconditional BFFR at full coverage was 62.5\% for every model.
 
 \section{Results}
 Both pre-specified primary endpoints were null: Stage-B attacker-value adoption was 0\% in both tiers (RQ2), and no D3@70 comparison with D1 or D2 was significant (RQ3).
@@ -166,8 +169,10 @@ The exposed-trial breakdown of natural retrieval below was added after these out
 Natural retrieval shows how poisoning manifests under a conflict-abstaining prompt.
 At $k=5$, a retrieved poison rarely transferred its value, but exposed Tier~1 trials usually lost the correct answer and became non-committal.
 Operationally these are different failures: non-commitment is an availability loss that routes the lookup to human or record verification, whereas attacker-value adoption is a silent integrity failure.
-In the pre-specified secondary $k=2$ condition, all three model families adopted the attacker value on the same nine exposed trials, consistent with a retrieval-composition effect rather than a model-specific one.
-Because retrieved document IDs were not logged in generation rows, we do not claim that a particular clean-copy configuration caused those nine adoptions.
+The commit-required control shows that this conversion depends on the prompt: without permission to abstain, 24 of 49 (Mistral) and 8 of 49 (Luna) exposed trials adopted the attacker value.
+In the pre-specified secondary $k=2$ condition, all three model families adopted the attacker value on the same nine exposed trials, and the reproduced contexts show that none of the nine contained a clean same-item passage.
+The forced-composition control supports a narrower mechanism than that association suggests: under the base prompt, the poison's paired clean twin turned adoption into abstention (0/80 adoptions and 0/80 correct answers for both locked models), whereas a different clean support left 15--17/80 adoptions in the locked models and 63/80 in the exploratory backup.
+Context composition therefore shapes adoption strongly, but whether a clean copy protects depends on which copy is retrieved and on the model, and the protection operates through the abstention instruction.
 
 RQ2 was inconclusive rather than evidence of robustness: forced-exposure adoption was at floor in both tiers.
 The evidence-rich Stage-B context contains three clean same-item supports against one poison, and the base prompt explicitly permits abstention on unresolved conflict.
@@ -195,9 +200,10 @@ D3 is an upper bound because the harness supplies the applicable record key.
 
 \section{Conclusion}
 GridPoison-100 separates retrieval exposure, attacker-value adoption, non-commitment, and benchmark consequence in utility-operations RAG.
-Under a conflict-abstaining prompt, one retrieved poison at $k=5$ usually converted a correct lookup into non-commitment rather than silent corruption; in the pre-specified secondary $k=2$ condition, adoption rose and occurred on the same nine exposed trials across all three model families.
-A keyed structured-record check removed covered out-of-range commitments in proportion to its coverage, but flagged correct answers whenever the record lacked the applicable jurisdiction or interconnection variant.
-For utility deployments, the practical implication is architectural: preserve redundant approved evidence in retrieval, cover high-consequence settings in the structured record, and scope those records to the jurisdiction and interconnection in which they are authoritative.
+Under a conflict-abstaining prompt, one retrieved poison at $k=5$ usually converted a correct lookup into non-commitment rather than silent corruption; a locked follow-up showed that this protection is abstention-mediated, because requiring a numeric answer raised exposed-trial adoption to 49.0\% (Mistral Small 3.2) and 16.3\% (GPT-5.6 Luna).
+Adoption tracked context composition---0/80 in both locked models when the poison's paired clean twin was present and 80/80 for a lone poison---but a different clean support did not reliably prevent it, so the pre-stated strong composition hypothesis was falsified.
+A keyed structured-record check removed out-of-range commitments only for the items its coverage draw included (0--1 of 6--8 violating trials at 40\% coverage; all at full coverage), and flagged correct answers whenever the record lacked the applicable jurisdiction or interconnection variant.
+The design implication these data support directly is to scope structured records to the jurisdiction and interconnection in which they are authoritative; whether redundant approved evidence limits silent corruption in real repositories remains untested.
 
 \section*{Generative AI Use Disclosure}
 Generative AI systems including ChatGPT (OpenAI), Claude (Anthropic), and Grok (xAI) assisted software scaffolding, benchmark/corpus drafting, literature triage, source-consistency checking, adversarial methodological review, and language editing.
