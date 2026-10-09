@@ -70,7 +70,7 @@ Because those effects are already known, retrieval depth is a secondary factor h
 
 RobustRAG introduced an isolate-then-aggregate strategy for retrieval corruption~\cite{xiang2024robustrag}; we use this family as a generic defense baseline rather than presenting it as new.
 ClashEval quantified conflicts between parametric knowledge and retrieved evidence~\cite{wu2024clasheval}.
-Controlled knowledge-conflict work also shows that model behavior can change sharply depending on how conflicting external evidence is composed~\cite{xie2024chameleon}, motivating our paired-twin versus non-paired-support Stage~C control.
+Controlled knowledge-conflict work shows that model behavior can change sharply with conflicting external evidence~\cite{xie2024chameleon}; recent conflict-aware RAG evaluation also studies abstention under contradictory retrieval~\cite{han2026evidenceconflicts}. These results motivate our paired-twin versus non-paired-support Stage~C control and commit-required manipulation.
 Other work has shown that evidence phrasing, publication time, and metadata can affect model preferences~\cite{wan2024evidence,chiang2024metadata}.
 These findings motivate our vendor-bulletin condition but also rule out treating authority framing as a primary contribution.
 
