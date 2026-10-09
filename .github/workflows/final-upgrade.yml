@@ -1,0 +1,112 @@
+name: Final Upgrade Experiments
+
+on:
+  push:
+    paths:
+      - ".github/workflows/final-upgrade.yml"
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+concurrency:
+  group: final-upgrade
+  cancel-in-progress: false
+
+jobs:
+  generate:
+    runs-on: ubuntu-latest
+    timeout-minutes: 360
+    strategy:
+      fail-fast: false
+      max-parallel: 3
+      matrix:
+        include:
+          - model: qwen/qwen3-8b
+            key: qwen_qwen3-8b
+          - model: mistralai/mistral-small-3.2-24b-instruct
+            key: mistralai_mistral-small-3.2-24b-instruct
+          - model: openai/gpt-5.6-luna
+            key: openai_gpt-5.6-luna
+    env:
+      OPENAI_COMPAT_BASE_URL: https://openrouter.ai/api/v1
+      OPENAI_COMPAT_API_KEY: ${{ secrets.OPENROUTER_API_KEY }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+      - name: Install project
+        run: python -m pip install -e .
+      - name: Validate benchmark
+        run: python scripts/validate_benchmark.py
+      - name: Require API key
+        run: |
+          test -n "$OPENAI_COMPAT_API_KEY" || (echo "Missing repository secret OPENROUTER_API_KEY" && exit 1)
+      - name: Run commit-required control
+        run: |
+          mkdir -p "results/${{ matrix.key }}"
+          python scripts/run_upgrade_generation.py \
+            --model "${{ matrix.model }}" \
+            --mode commit \
+            --out "results/${{ matrix.key }}/upgrade_commit.jsonl"
+      - name: Run BM25 sensitivity
+        run: |
+          python scripts/run_upgrade_generation.py \
+            --model "${{ matrix.model }}" \
+            --mode bm25 \
+            --out "results/${{ matrix.key }}/upgrade_bm25.jsonl"
+      - name: Run Stage C forced-composition control
+        run: |
+          python scripts/run_upgrade_generation.py \
+            --model "${{ matrix.model }}" \
+            --mode stagec \
+            --out "results/${{ matrix.key }}/upgrade_stagec.jsonl"
+      - name: Stage artifact
+        run: |
+          mkdir -p "artifact/${{ matrix.key }}"
+          cp "results/${{ matrix.key }}"/upgrade_*.jsonl "artifact/${{ matrix.key }}/"
+      - uses: actions/upload-artifact@v4
+        with:
+          name: "gridpoison-upgrade-${{ matrix.key }}"
+          path: artifact/
+          if-no-files-found: error
+          retention-days: 30
+
+  commit-results:
+    needs: generate
+    if: ${{ always() && needs.generate.result == 'success' }}
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: main
+      - uses: actions/download-artifact@v4
+        with:
+          pattern: gridpoison-upgrade-*
+          path: results
+          merge-multiple: true
+      - name: Verify result matrix
+        run: |
+          test -f results/qwen_qwen3-8b/upgrade_commit.jsonl
+          test -f results/qwen_qwen3-8b/upgrade_bm25.jsonl
+          test -f results/qwen_qwen3-8b/upgrade_stagec.jsonl
+          test -f results/mistralai_mistral-small-3.2-24b-instruct/upgrade_commit.jsonl
+          test -f results/mistralai_mistral-small-3.2-24b-instruct/upgrade_bm25.jsonl
+          test -f results/mistralai_mistral-small-3.2-24b-instruct/upgrade_stagec.jsonl
+          test -f results/openai_gpt-5.6-luna/upgrade_commit.jsonl
+          test -f results/openai_gpt-5.6-luna/upgrade_bm25.jsonl
+          test -f results/openai_gpt-5.6-luna/upgrade_stagec.jsonl
+      - name: Commit upgrade results
+        run: |
+          git config user.name "gridpoisonrag-bot"
+          git config user.email "actions@users.noreply.github.com"
+          git add results/*/upgrade_*.jsonl
+          if git diff --cached --quiet; then
+            echo "No upgrade result changes to commit"
+            exit 0
+          fi
+          git commit -m "Add final-upgrade experiment results"
+          git pull --rebase origin main
+          git push origin HEAD:main
