@@ -3,7 +3,8 @@
 \usepackage{amsmath}
 \usepackage{amssymb}
 \usepackage{graphicx}
-\usepackage{url}
+\usepackage{xurl}
+\usepackage{balance}
 \usepackage[hidelinks]{hyperref}
 
 \title{Does the Assistant Check the Record? Knowledge-Base Poisoning and System-of-Record Validation in Utility Operations RAG}
@@ -46,7 +47,7 @@ We study three research questions.
 
 The contributions are fourfold:
 (1) a write-path threat model for low-trust utility-document repositories;
-(2) GridPoison-100, a released benchmark with source-grounded public items, a fictional asset register, and legitimate-conflict controls;
+(2) GridPoison-100, a benchmark with source-grounded public items, a fictional asset register, and legitimate-conflict controls;
 (3) a two-stage evaluation that separates retrieval compromise, conditional adoption, and consequence grading; and
 (4) an accounting of what deterministic system-of-record validation gains and costs under partial coverage and deliberately simplified record scope.
 
@@ -194,6 +195,7 @@ The practical implication is not that more filtering is always better, but that 
 Generative AI systems including ChatGPT (OpenAI), Claude (Anthropic), and Grok (xAI) assisted software scaffolding, benchmark/corpus drafting, literature triage, source-consistency checking, adversarial methodological review, and language editing.
 All reported numerical results derive from logged experiments and deterministic analysis code; the authors remain fully responsible for the accuracy, originality, and integrity of the manuscript.
 
+\balance
 \bibliographystyle{IEEEtran}
 \bibliography{references}
 \end{document}
