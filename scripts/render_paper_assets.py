@@ -4,6 +4,8 @@ import argparse
 import json
 from pathlib import Path
 
+from scipy.stats import beta
+
 ROOT = Path(__file__).resolve().parents[1]
 
 
@@ -30,6 +32,14 @@ def interval_pct(entry):
     if not entry:
         return "--"
     return f"{100*entry['point']:.1f}\\% [{100*entry['lo95']:.1f}, {100*entry['hi95']:.1f}]"
+
+
+def exact_binomial_ci(k: int, n: int) -> tuple[float, float]:
+    if n <= 0:
+        return (0.0, 1.0)
+    lo = 0.0 if k == 0 else float(beta.ppf(0.025, k, n - k + 1))
+    hi = 1.0 if k == n else float(beta.ppf(0.975, k + 1, n - k))
+    return lo, hi
 
 
 def delta_pp(entry):
@@ -83,6 +93,11 @@ def main():
 
     def across(condition, tier, metric):
         return [group(condition, m, tier).get(metric) for m in models]
+
+    def overall_metric(condition, model, metric):
+        groups = [group(condition, model, tier) for tier in (1, 2)]
+        den = sum(g["n_trials"] for g in groups)
+        return sum(g[metric] * g["n_trials"] for g in groups) / den
 
     runs = {Path(x["file"]).name: x for x in stage_a["runs"]}
 
@@ -178,24 +193,21 @@ def main():
         for m in models
     ]
     same_k2_set = bool(k2_sets) and all(x == k2_sets[0] for x in k2_sets)
-    k5_ci = (
-        f"[{100*k5_entry['car_cluster_lo95']:.1f}, {100*k5_entry['car_cluster_hi95']:.1f}]"
-        if k5_entry.get("car_cluster_lo95") is not None else None
-    )
-    k2_ci = (
-        f"[{100*k2_entry['car_cluster_lo95']:.1f}, {100*k2_entry['car_cluster_hi95']:.1f}]"
-        if k2_entry.get("car_cluster_lo95") is not None else None
-    )
+    k5_k = int(k5_entry["n_attacker_exposed"])
+    k5_n = int(k5_entry["n_exposed"])
+    k2_k = int(k2_entry["n_attacker_exposed"])
+    k2_n = int(k2_entry["n_exposed"])
+    k5_lo, k5_hi = exact_binomial_ci(k5_k, k5_n)
+    k2_lo, k2_hi = exact_binomial_ci(k2_k, k2_n)
     k2_same = "the same " if same_k2_set else ""
-    k2_ci_text = f"; item-cluster 95\\% CI {k2_ci}" if k2_ci else ""
     lines.append(
         "At $k=5$, one poison was retrieved in 49 Tier~1 trials per model; only "
-        f"{count_range(one_correct)} remained correct, while direct attacker adoption was 4.1\\% "
-        + (f"(item-cluster 95\\% CI {k5_ci}) " if k5_ci else "")
-        + "of exposed trials. "
+        f"{count_range(one_correct)} remained correct, while direct attacker adoption was "
+        f"{k5_k}/{k5_n} ({100*k5_k/k5_n:.1f}\\%; exact 95\\% CI "
+        f"{100*k5_lo:.1f}--{100*k5_hi:.1f}). "
         "In the pre-specified secondary $k=2$ condition, all three models adopted the attacker value in "
         f"{k2_same}{count_range(k2_attacker)} of {count_range(k2_exposed)} exposed Tier~1 trials "
-        f"(CAR 34.6\\%{k2_ci_text})."
+        f"(CAR {100*k2_k/k2_n:.1f}\\%; exact 95\\% CI {100*k2_lo:.1f}--{100*k2_hi:.1f})."
     )
     if analysis["wrong_in_range"][models[0]].get("by_tier"):
         t1_adopted = [analysis["wrong_in_range"][m]["by_tier"]["T1"]["n_adopted_exposed"] for m in models]
@@ -310,12 +322,38 @@ def main():
         f"Holm-adjusted tests were non-significant ($p_{{\\mathrm{{Holm}}}}={p_text}$). "
         "The defense comparisons are descriptive."
     )
+    all_crr = [
+        overall_metric(cond, model, "CRR")
+        for cond in ("B2_P3_STRESS", "D1_P3", "D2_P3", "D3_P3_70")
+        for model in models
+    ]
+    all_ncr = [
+        overall_metric(cond, model, "NCR")
+        for cond in ("B2_P3_STRESS", "D1_P3", "D2_P3", "D3_P3_70")
+        for model in models
+    ]
+    d3_crr_delta_pp = [
+        100 * (
+            overall_metric("D3_P3_70", model, "CRR")
+            - overall_metric("B2_P3_STRESS", model, "CRR")
+        )
+        for model in models
+    ]
+    lines.append(
+        f"With at most {max_discordant} discordant items, the smallest attainable exact two-sided "
+        "$p$ was 0.25 before adjustment, so the locked comparisons could not reach significance at "
+        "these violation rates. Because BVR counts non-commitment as a non-violation, note that across "
+        f"the stress-condition defenses CRR was {100*min(all_crr):.1f}--{100*max(all_crr):.1f}\\% and "
+        f"non-commitment was {100*min(all_ncr):.1f}--{100*max(all_ncr):.1f}\\%; D3@70 lowered CRR by "
+        f"{abs(max(d3_crr_delta_pp)):.1f}--{abs(min(d3_crr_delta_pp)):.1f} points relative to B2."
+    )
     sens = analysis.get("mcnemar_any_phrasing", [])
     if sens:
         min_sens = min(x["p_holm"] for x in sens)
         lines.append(
-            f"Counting an item as violating when either phrasing violates also leaves all six "
-            f"comparisons non-significant (minimum $p_{{\\mathrm{{Holm}}}}={min_sens:.3f}$)."
+            f"In a post-hoc sensitivity analysis, counting an item as violating when either phrasing "
+            f"violates also leaves all six comparisons non-significant "
+            f"(minimum $p_{{\\mathrm{{Holm}}}}={min_sens:.3f}$)."
         )
 
     lines.append("\\subsection{Legitimate-conflict cost}")
@@ -327,7 +365,8 @@ def main():
         f"Clean RAG answered {count_range(clean_conflict_correct)} of 40 legitimate-conflict trials correctly. "
         f"The structured record equals the benchmark target for {poisonable_record_matches}/80 poisonable items, "
         f"but intentionally stores a generic alternative for {tier3_generic}/20 Tier~3 items. "
-        "BFFR therefore measures a controlled record-scope gap and is conditioned on clean-RAG correctness."
+        "BFFR therefore measures a controlled record-scope gap and is conditioned on clean-RAG correctness "
+        "(a post-hoc refinement; unconditional BFFR at full coverage was 62.5\\% for every model)."
     )
     lines.append("\\begin{table}[t]")
     lines.append("\\caption{Conditional benign-conflict false-flag rate (BFFR).}")
