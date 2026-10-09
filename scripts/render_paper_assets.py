@@ -187,6 +187,7 @@ def main():
         if k2_entry.get("car_cluster_lo95") is not None else None
     )
     k2_same = "the same " if same_k2_set else ""
+    k2_ci_text = f"; item-cluster 95\\% CI {k2_ci}" if k2_ci else ""
     lines.append(
         "At $k=5$, one poison was retrieved in 49 Tier~1 trials per model; only "
         f"{count_range(one_correct)} remained correct, while direct attacker adoption was 4.1\\% "
@@ -194,7 +195,7 @@ def main():
         + "of exposed trials. "
         "In the pre-specified secondary $k=2$ condition, all three models adopted the attacker value in "
         f"{k2_same}{count_range(k2_attacker)} of {count_range(k2_exposed)} exposed Tier~1 trials "
-        f"(CAR 34.6\\%{'; item-cluster 95\\% CI ' + k2_ci if k2_ci else ''})."
+        f"(CAR 34.6\\%{k2_ci_text})."
     )
     if analysis["wrong_in_range"][models[0]].get("by_tier"):
         t1_adopted = [analysis["wrong_in_range"][m]["by_tier"]["T1"]["n_adopted_exposed"] for m in models]
