@@ -1,1 +1,0 @@
-Finalize completed Mistral/Luna follow-up controls with exploratory Gemini backup.
