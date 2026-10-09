@@ -2,6 +2,18 @@
 
 This document records analysis decisions locked **before any LLM generation results are observed**. Retrieval-only Stage A was used as design calibration.
 
+## Post-generation deviation record (9 Oct 2026)
+
+This dated addendum preserves the original lock below and records execution/reporting deviations after generation; it does not retroactively alter the locked plan.
+
+- The external engineer-review sequencing gate was not completed before three-model generation. The paper makes no engineer-validated, certification, or physical-safety claim.
+- F/R manual adjudication was not performed. Submission-facing metrics pool every non-numeric output as non-commitment and do not interpret the F/R split.
+- Both locked primary endpoints were null. The natural-retrieval exposed-trial breakdown was added in commit 281ca64 after results were known; the k=2 condition itself was already locked as secondary and is labeled as such in the paper.
+- BFFR was subsequently conditioned on clean-RAG correctness in commit 455fba8; this narrows the metric to flags on otherwise-correct benign-conflict answers.
+- The planned SHA-256 freeze manifest was not committed. Benchmark, corpus, prompts, grader, and experiment configuration were fixed in Git history before generation; commit 3de75c6 records the final pre-generation experiment alignment.
+- The exploratory temperature-0.7 sensitivity runs were not performed.
+
+
 ## Retrieval calibration and resulting design choice
 
 A retrieval-only pilot on the controlled minimal-pair corpus showed that one-document exposure at k=5 was strongly imbalanced across item tiers, whereas the three-document condition produced broad exposure in both tiers. Because RQ2 is specifically about model adoption after exposure, a natural-retrieval Tier-1/Tier-2 comparison would confound retrieval with generation and leave a sparse Tier-2 denominator.

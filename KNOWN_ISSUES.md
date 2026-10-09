@@ -8,3 +8,6 @@ This file records implementation details that are relevant to reproducibility bu
 - OpenRouter provider routing was not pinned. Requested/resolved model identifiers, provider metadata when returned, response IDs, token usage and timestamps are preserved in raw result rows.
 - A pre-generation SHA-256 manifest was planned but was not committed. Git commit history is the provenance record for the immutable benchmark/corpus used by the completed runs; no later manifest is presented as a preregistration artifact.
 - D3 receives the benchmark item ID as the record key. Query-to-record entity linking is therefore outside scope, and D3 should be interpreted as an upper-bound structured-record check rather than a complete deployed defense.
+
+- Raw label `W` can also contain non-numeric text that matches neither the conflict nor refusal regex; submission-facing analysis therefore uses `committed_value` rather than raw W/F/R labels to distinguish numeric errors from non-commitment.
+- The OpenRouter request set `max_tokens=256`, but provider reasoning-token accounting differed by model. Qwen completion metadata can exceed 256 tokens because reasoning was not bounded the same way; GPT-5.6 Luna reasoning consumed the requested budget and produced the documented empty outputs.

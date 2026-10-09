@@ -41,21 +41,21 @@ The evaluation separates:
 
 - **B0** closed book
 - **B1** clean RAG
-- **B2** poisoned vanilla RAG
+- **B2** poisoned RAG with the same conflict-abstaining base prompt
 - **D1** cautious/conflict-aware prompt
 - **D2** isolate-then-aggregate evidence voting
 - **D3** deterministic system-of-record validation
 
-D3 is evaluated at imperfect record coverage rather than being treated as an oracle.
+D3 is evaluated as an upper-bound keyed record check under imperfect coverage; query-to-record linking is outside scope.
 
 ## Reproducibility rules
 
 - Public-standard facts must have a public source and source locator.
 - Asset-specific facts are explicitly fictional and cannot be presented as real utility data.
 - No result may be described as proof of grid safety, security or resilience.
-- The benchmark is frozen and hashed before model runs.
+- Benchmark/corpus inputs were fixed in Git history before generation; a planned pre-generation SHA-256 manifest was not committed.
 - Main runs use temperature 0; optional stochastic sensitivity runs are separate.
-- Retrieval depth is a secondary factor, not a headline contribution.
+- Retrieval depth is a pre-specified secondary factor; any prominence in the paper is labeled descriptive/secondary.
 - Do not reuse figures, prose or experimental framing from the prior healthcare-RAG access-control study.
 
 ## Status

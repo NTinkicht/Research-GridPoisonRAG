@@ -22,7 +22,7 @@ Tier 3 intentionally pairs legitimate values that differ because of jurisdiction
 
 ## Poison construction
 
-Primary poison variants are factual assertions and contain no instructions to the model. The main condition changes the critical numeric value while retaining the item's target context. Three-poison trials use distinct paraphrases rather than duplicated text. A dated vendor-bulletin framing variant is secondary.
+Primary poison variants are factual assertions and contain no instructions to the model. The main condition changes the critical numeric value while retaining the item's target context. Three-poison trials use distinct paraphrases rather than duplicated text; one paraphrase inherits the directive wording of the clean training-card template while changing only the value. A dated vendor-bulletin framing variant is secondary.
 
 ## Intended use
 
@@ -48,3 +48,7 @@ The machine-readable files pass schema and count validation. Tier-1 and Tier-3 p
 ## Reproducibility
 
 Git history preserves the benchmark/corpus state used for generation. A pre-generation SHA-256 manifest was planned but not committed; this is documented as provenance rather than retroactively described as preregistration. The two query phrasings of one item are repeated measures, not independent benchmark samples.
+
+## Known overlaps and collisions
+
+Some controlled values overlap by construction. T1-003/T3-001 and T1-004/T3-003 reuse the same Massachusetts undervoltage facts in different benchmark roles. A small number of poison values equal another item's legitimate value. Grading is item-scoped, so these collisions do not change adoption labels.
