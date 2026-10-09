@@ -1,1 +1,1 @@
-Cancel accidental Auto Finalize run 37975683472.
+Force-cancel accidental Auto Finalize run 37975683472.
