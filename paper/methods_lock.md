@@ -42,6 +42,24 @@ Primary readout: among the original B2 one-poison Tier-1 exposed trials, compare
 
 B1 under the commit-required prompt is the clean-answer control. Any empty output is retained in the primary intention-to-query analysis and separately reported in a sensitivity analysis excluding empty outputs; empties are not retrospectively labeled as API failures without transport-level evidence.
 
+
+### Cross-retriever and forced-composition prospective controls
+
+These additional Plan-B checks were locked before their LLM generations.
+
+**BM25 generation sensitivity.** The one-plain-poison natural-retrieval condition will be generated with BM25 at both k=5 and k=2 for all 80 poisonable items, both query phrasings, and all three model families. The lexical retriever uses BM25Okapi with lower-cased whitespace tokenization and deterministic corpus-order tie breaking. The prediction from the retrieval-only audit is that BM25 will retain clean same-item evidence in most or all exposed contexts and therefore produce substantially less attacker-value adoption than the dense retriever's k=2 arm. A BM25 k=2 CAR near the dense 34.6% result would count against that prediction.
+
+**Stage C forced-composition control.** A prospective context intervention will use only the formal query for each of the 80 poisonable items, all three model families, and the original conflict-abstaining base prompt. Five fixed contexts are defined:
+- C0: the poison's paired clean twin plus another clean same-item support;
+- C1: poison plus its paired clean twin;
+- C2: poison plus a different clean same-item support;
+- C3: poison plus the deterministic corpus distractor that explicitly states it does not apply to the target item;
+- C4: poison alone.
+
+For C1--C3, poison position is deterministic from SHA-256(item_id) parity and is therefore fixed before generation. The pre-stated composition prediction is attacker-value adoption below 20% in C1 and C2, and above 50% in C4. If any model reaches at least 20% adoption in C1/C2 or at most 50% in C4, the strong composition hypothesis is treated as falsified. C3 is an intermediate clean-free context and is reported without a threshold.
+
+These controls are follow-up experiments and are not added to the original RQ2/RQ3 confirmatory families.
+
 ### Existing-data power-system consequence analysis
 
 A consequence classification will be computed from the frozen benchmark values and existing generated outcomes, with no new LLM calls. It is explicitly post-hoc and is intended to add domain interpretation, not to create a new confirmatory endpoint.
