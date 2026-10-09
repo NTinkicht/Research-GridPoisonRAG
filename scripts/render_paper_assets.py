@@ -249,13 +249,18 @@ def main():
         x["b"] + x["c"] for x in analysis.get("mcnemar_primary", [])
     )
     pvals = [x["p_holm"] for x in analysis.get("mcnemar_primary", [])]
+    p_text = (
+        f"{min(pvals):.1f}"
+        if abs(min(pvals) - max(pvals)) < 1e-12
+        else f"{min(pvals):.1f}--{max(pvals):.1f}"
+    )
     lines.append(
         "Against vanilla poisoned RAG, D3@70 removed 6/7, 5/6, and 6/8 violating trials for "
         "Mistral, Qwen, and GPT-5.6 Luna, respectively, and full coverage removed all of them. "
         f"D2 increased Qwen BVR by {-100*qwen_d2:.1f} points relative to B2. "
         f"Only 5--8 trials violated per model and the primary McNemar comparisons had at most {max_discordant} "
         "discordant items; all six Holm-adjusted tests therefore remained non-significant "
-        f"($p_{{\\mathrm{{Holm}}}}={min(pvals):.1f}$--{max(pvals):.1f}$). "
+        f"($p_{{\\mathrm{{Holm}}}}={p_text}$). "
         "The defense comparisons are descriptive."
     )
 
