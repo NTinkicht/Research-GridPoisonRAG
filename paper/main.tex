@@ -116,7 +116,7 @@ D1 is a cautious prompt instructing the model to identify unresolved source conf
 D2 isolates each retrieved passage, obtains one value per passage, and aggregates by majority, following the isolate-then-aggregate defense family~\cite{xiang2024robustrag}.
 D3 is deterministic system-of-record validation: when a committed value is covered by the structured record, a mismatch is replaced by a verification flag.
 D3 is evaluated at 40\%, 70\%, and 100\% deterministic coverage.
-The record is deliberately imperfect for some legitimate jurisdictional variants, making false flags measurable instead of giving D3 oracle access to the answer key.
+The record is deliberately imperfect for some legitimate jurisdictional variants, including generic defaults in place of two Massachusetts UV overrides as well as the Tier~3 conflict cases, making false flags measurable instead of giving D3 oracle access to the answer key.
 
 RQ3 uses the three-poison $k=5$ stress condition to avoid a retrieval floor when comparing defenses.
 Secondary one-factor deviations examine a dated vendor bulletin, a wrong-but-in-range value, and $k=2$.
@@ -175,8 +175,9 @@ No power-flow, protection, thermal, or transient simulation is performed, so the
 The study also focuses on scalar factual lookups; procedural switching sequences and open-ended engineering judgment are outside scope.
 
 The public values were source-audited before generation.
-Because the conference schedule preceded completion of the external power-engineer review, generation used the committed source-audited candidate benchmark; the benchmark is therefore not described as engineer-validated.
-Any later review that changes a target value, applicability condition, allowable interval, or poison construction requires rerunning the affected experiments.
+After generation, all 100 items also underwent an LLM-assisted power-systems domain-consistency audit covering source interpretation, synthetic-asset plausibility, and legitimate-conflict logic; no target-value change was identified.
+This automated audit is not professional engineering certification, and the benchmark is not described as engineer-validated.
+Any later human review that changes a target value, applicability condition, allowable interval, or poison construction requires rerunning the affected experiments.
 The forced-exposure result also reflects a deliberately evidence-rich context with three clean same-item supports against one poison, so 0\% attacker-value adoption should not be generalized to weaker or noisier evidence settings.
 
 \section{Conclusion}
