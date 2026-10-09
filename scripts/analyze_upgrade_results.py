@@ -181,6 +181,7 @@ def main() -> None:
     out = ROOT / "results" / "upgrade_analysis.json"
     out.write_text(json.dumps(summary, indent=2), encoding="utf-8")
     write_tex(summary)
+    ensure_paper_include()
     print(json.dumps(summary, indent=2))
 
 
