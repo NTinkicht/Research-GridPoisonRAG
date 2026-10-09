@@ -60,7 +60,7 @@ D3 is evaluated at imperfect record coverage rather than being treated as an ora
 
 ## Status
 
-Repository foundation initialized 7 Oct 2026. Public-source extraction, benchmark generation, validation, experiment pipeline and paper scaffolding are tracked in the repository.
+The three-model experiment matrix and final statistical analysis are complete. Tier 1 has an authoritative-source audit, and all 100 items now also have an LLM-assisted power-systems domain-consistency audit in [benchmark/LLM_DOMAIN_AUDIT.md](benchmark/LLM_DOMAIN_AUDIT.md) with item-level outcomes in [benchmark/review/llm_domain_review.csv](benchmark/review/llm_domain_review.csv). This automated review is not professional engineering certification; `engineer_reviewed` remains false unless a human engineer explicitly signs off.
 
 
 ## Quick start
@@ -81,12 +81,12 @@ python scripts/run_stage_a.py --variant out_of_range_vendor_bulletin --poison-co
 
 The complete execution sequence is in [RUNBOOK.md](RUNBOOK.md).
 
-## Current gates
+## Current validation state
 
-1. **Human validation:** all 100 items are machine-valid but remain `engineer_reviewed=false` until explicit power-engineer review. See `benchmark/ENGINEER_REVIEW.md` and Issue #1.
-2. **Freeze:** do not create the final SHA-256 manifest until review fixes are complete.
-3. **Clean pipeline:** run B0/B1 on one strong model and require Tier-2 clean-RAG CRR >= 80% before interpreting any poisoning result.
-4. **Paid generation:** the GitHub workflow is manual only and requires the `OPENROUTER_API_KEY` repository secret; it is intentionally not triggered automatically.
+1. **Public-source audit:** Tier 1 source transcription and interpretation are documented in `benchmark/PUBLIC_SOURCE_AUDIT.md`.
+2. **LLM domain audit:** all 100 items passed the documented automated technical-consistency review without a required target-value change. This does not set `engineer_reviewed=true`.
+3. **Professional review:** a human power-engineer review remains an optional strengthening step for a future benchmark release or journal extension; the current paper does not claim engineer certification.
+4. **Clean-RAG gate:** Tier-2 clean-RAG CRR exceeded the locked 80% interpretation threshold for all three evaluated models.
 5. **Claims:** report benchmark-level answer integrity and out-of-range commitments, never physical grid safety, security, or resilience.
 
 ## Repository map
