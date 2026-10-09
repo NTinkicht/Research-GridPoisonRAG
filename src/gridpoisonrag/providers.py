@@ -8,7 +8,7 @@ from typing import Any
 import httpx
 
 
-_RETRYABLE = {429, 500, 502, 503, 504}
+_RETRYABLE = {408, 429, 500, 502, 503, 504}
 
 
 @dataclass
@@ -19,6 +19,9 @@ class OpenAICompatClient:
     timeout_s: float = 120.0
     max_tokens: int = 256
     max_attempts: int = 10
+    request_delay_s: float = field(
+        default_factory=lambda: float(os.environ.get("OPENAI_COMPAT_REQUEST_DELAY_S", "0"))
+    )
     last_metadata: dict[str, Any] = field(default_factory=dict, init=False)
 
     @classmethod
@@ -46,13 +49,19 @@ class OpenAICompatClient:
         last_error: Exception | None = None
         for attempt in range(1, self.max_attempts + 1):
             try:
+                if self.request_delay_s > 0:
+                    time.sleep(self.request_delay_s)
                 with httpx.Client(timeout=self.timeout_s) as client:
                     response = client.post(
                         f"{self.base_url}/chat/completions",
                         headers={"Authorization": f"Bearer {self.api_key}"},
                         json=payload,
                     )
-                if response.status_code in _RETRYABLE:
+
+                transient_openrouter_404 = (
+                    response.status_code == 404 and "openrouter.ai" in self.base_url
+                )
+                if response.status_code in _RETRYABLE or transient_openrouter_404:
                     retry_after = response.headers.get("retry-after")
                     if retry_after:
                         try:
@@ -63,9 +72,11 @@ class OpenAICompatClient:
                         delay = min(120.0, 5.0 * (2 ** (attempt - 1)))
                     if attempt == self.max_attempts:
                         response.raise_for_status()
+                    detail = response.text[:240].replace("\n", " ")
                     print(
                         f"Retryable OpenRouter HTTP {response.status_code}; "
-                        f"attempt {attempt}/{self.max_attempts}, sleeping {delay:.1f}s",
+                        f"attempt {attempt}/{self.max_attempts}, sleeping {delay:.1f}s; "
+                        f"body={detail!r}",
                         flush=True,
                     )
                     time.sleep(delay)
