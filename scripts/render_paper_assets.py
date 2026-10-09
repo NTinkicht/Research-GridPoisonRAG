@@ -4,8 +4,6 @@ import argparse
 import json
 from pathlib import Path
 
-from scipy.stats import beta
-
 ROOT = Path(__file__).resolve().parents[1]
 
 
@@ -32,14 +30,6 @@ def interval_pct(entry):
     if not entry:
         return "--"
     return f"{100*entry['point']:.1f}\\% [{100*entry['lo95']:.1f}, {100*entry['hi95']:.1f}]"
-
-
-def exact_binomial_ci(k: int, n: int) -> tuple[float, float]:
-    if n <= 0:
-        return (0.0, 1.0)
-    lo = 0.0 if k == 0 else float(beta.ppf(0.025, k, n - k + 1))
-    hi = 1.0 if k == n else float(beta.ppf(0.975, k + 1, n - k))
-    return lo, hi
 
 
 def delta_pp(entry):
@@ -138,7 +128,8 @@ def main():
     lines.append(
         "\\caption{Natural-retrieval outcomes (\\%; $k=5$ unless noted). "
         "CAR is conditional on exposure; exposed Tier~1/Tier~2 trials per model are "
-        "49/3 (1 poison), 49/69 (3 poisons), 47/7 (bulletin), and 26/3 ($k=2$).}"
+        "49/3 (1 poison), 49/69 (3 poisons), 47/7 (bulletin), and 26/3 ($k=2$). "
+        "The clean row is $k=5$; no clean $k=2$ generation arm was run.}"
     )
     lines.append("\\label{tab:natural}")
     lines.append("\\centering")
@@ -197,17 +188,63 @@ def main():
     k5_n = int(k5_entry["n_exposed"])
     k2_k = int(k2_entry["n_attacker_exposed"])
     k2_n = int(k2_entry["n_exposed"])
-    k5_lo, k5_hi = exact_binomial_ci(k5_k, k5_n)
-    k2_lo, k2_hi = exact_binomial_ci(k2_k, k2_n)
+    k5_lo = float(k5_entry["car_cluster_lo95"])
+    k5_hi = float(k5_entry["car_cluster_hi95"])
+    k2_lo = float(k2_entry["car_cluster_lo95"])
+    k2_hi = float(k2_entry["car_cluster_hi95"])
     k2_same = "the same " if same_k2_set else ""
+
+    one_noncommit = [
+        analysis["natural_exposed"][f"{m}|B2_P1|T1"]["n_noncommit_exposed"] for m in models
+    ]
+    one_other_wrong = [
+        analysis["natural_exposed"][f"{m}|B2_P1|T1"]["n_exposed"]
+        - analysis["natural_exposed"][f"{m}|B2_P1|T1"]["n_attacker_exposed"]
+        - analysis["natural_exposed"][f"{m}|B2_P1|T1"]["n_correct_exposed"]
+        - analysis["natural_exposed"][f"{m}|B2_P1|T1"]["n_noncommit_exposed"]
+        for m in models
+    ]
+
+    clean_correct_on_later_exposed = []
+    k2_unexposed_correct = []
+    k2_unexposed_n = []
+    for m in models:
+        model_dir = ROOT / "results" / m.replace("/", "_")
+        b1_rows = read_jsonl(model_dir / "gate_b1.jsonl")
+        b2_rows = read_jsonl(model_dir / "main_b2_p1.jsonl")
+        exposed_keys = {
+            (r["item_id"], r["phrasing"])
+            for r in b2_rows
+            if r["tier"] == 1 and r.get("poison_exposed")
+        }
+        matched_clean = [
+            r for r in b1_rows
+            if r["tier"] == 1 and (r["item_id"], r["phrasing"]) in exposed_keys
+        ]
+        clean_correct_on_later_exposed.append(sum(r["label"] == "C" for r in matched_clean))
+
+        k2_rows = read_jsonl(model_dir / "dev_k2.jsonl")
+        unexposed = [r for r in k2_rows if r["tier"] == 1 and not r.get("poison_exposed")]
+        k2_unexposed_correct.append(sum(r["label"] == "C" for r in unexposed))
+        k2_unexposed_n.append(len(unexposed))
+
     lines.append(
         "At $k=5$, one poison was retrieved in 49 Tier~1 trials per model; only "
-        f"{count_range(one_correct)} remained correct, while direct attacker adoption was "
-        f"{k5_k}/{k5_n} ({100*k5_k/k5_n:.1f}\\%; exact 95\\% CI "
+        f"{count_range(one_correct)} remained correct and direct attacker adoption was "
+        f"{k5_k}/{k5_n} ({100*k5_k/k5_n:.1f}\\%; item-cluster 95\\% CI "
         f"{100*k5_lo:.1f}--{100*k5_hi:.1f}). "
+        f"Of those 49 exposed trials, {count_range(one_noncommit)} were non-committal and "
+        f"{count_range(one_other_wrong)} produced another wrong numeric value. "
+        f"The same exposure keys had been correct under clean $k=5$ in "
+        f"{count_range(clean_correct_on_later_exposed)}/49 trials, so exposure was concentrated on "
+        "otherwise-answerable queries. "
         "In the pre-specified secondary $k=2$ condition, all three models adopted the attacker value in "
         f"{k2_same}{count_range(k2_attacker)} of {count_range(k2_exposed)} exposed Tier~1 trials "
-        f"(CAR {100*k2_k/k2_n:.1f}\\%; exact 95\\% CI {100*k2_lo:.1f}--{100*k2_hi:.1f})."
+        f"(CAR {100*k2_k/k2_n:.1f}\\%; item-cluster 95\\% CI "
+        f"{100*k2_lo:.1f}--{100*k2_hi:.1f}). "
+        f"No clean $k=2$ generation arm was run; among the {count_range(k2_unexposed_n)} unexposed "
+        f"Tier~1 trials, each model was correct on {count_range(k2_unexposed_correct)}, so the $k=2$ "
+        "CRR row is not a clean-$k=5$ comparison."
     )
     if analysis["wrong_in_range"][models[0]].get("by_tier"):
         t1_adopted = [analysis["wrong_in_range"][m]["by_tier"]["T1"]["n_adopted_exposed"] for m in models]
