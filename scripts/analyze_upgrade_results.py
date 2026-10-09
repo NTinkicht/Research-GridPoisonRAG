@@ -426,8 +426,10 @@ def write_tex(summary: dict) -> None:
     if prc_pct is not None:
         consequence += f" All {prc['n']} PRC-024-3 poisons shortened the benchmark no-trip time by {prc_pct:.0f}\\%."
     consequence += (
-        f" All {public_exact['der_trip_n']} Massachusetts DER trip-threshold poisons moved the threshold "
-        "away from nominal."
+        f" All {public_exact['der_trip_n']} Massachusetts DER trip-threshold poisons moved the encoded "
+        "threshold farther from nominal, widening the benchmark no-trip region. "
+        f"The remaining {public_exact['n'] - public_exact['der_trip_n']} public exact-value items were "
+        "return-to-service values and are not assigned a directional consequence class here."
     )
     if tier2_pct is not None:
         consequence += f" All {tier2['n']} fictional Tier-2 poisons exceeded the record limit by {tier2_pct:.0f}\\%."
