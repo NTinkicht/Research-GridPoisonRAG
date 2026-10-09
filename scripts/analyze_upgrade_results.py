@@ -228,8 +228,8 @@ def write_tex(summary: dict) -> None:
         f"{lci['new_adoption']}/{lci['n_pairs']} for Luna "
         f"({fmt(lci['commit_adoption_pct'])}\\%; {fmt(lci['commit_adoption_exact_lo95_pct'])}--"
         f"{fmt(lci['commit_adoption_exact_hi95_pct'])}; $p={latex_p(lci['paired_exact_p'])}$). "
-        "The locked interpretation bands therefore classify Mistral as material and Luna as partial "
-        "abstention mediation. "
+        "The locked point-estimate bands therefore classify Mistral as material and Luna as partial "
+        "abstention mediation; Luna's exact interval spans the pre-stated band boundaries. "
         f"Luna produced {lci['commit_exposed_empty']} empty outputs among these {lci['n_pairs']} exposed "
         f"trials; excluding only those empties gives {fmt(lci['commit_adoption_nonempty_pct'])}\\% adoption. "
         f"The commit-prompt clean controls retained {fmt(mci['commit_clean_crr_pct'])}\\% CRR for Mistral "
@@ -325,6 +325,17 @@ def write_tex(summary: dict) -> None:
     )
     if tier2_pct is not None:
         consequence += f" All {tier2['n']} fictional Tier-2 poisons exceeded the record limit by {tier2_pct:.0f}\\%."
+    adopted_k2_items = set(
+        zero_clean.get("attacker_item_ids", [])
+        + with_clean.get("attacker_item_ids", [])
+    )
+    inside_ids = set(mad.get("inside_electrical_item_ids", []))
+    adopted_inside = sorted(adopted_k2_items & inside_ids)
+    if adopted_inside:
+        consequence += (
+            f" {len(adopted_inside)} of these electrical-component cases "
+            f"({', '.join(adopted_inside)}) were among the nine $k=2$ adopted items."
+        )
     consequence += (
         " These are benchmark consequence classes, not professional-engineering or physical-safety determinations."
     )
@@ -394,6 +405,7 @@ def analyze_retrieval_mechanism() -> dict:
             name: {
                 "n_exposed": len(group),
                 "attacker_adoptions": sum(r["label"] == "A" for r in group),
+                "attacker_item_ids": sorted({r["item_id"] for r in group if r["label"] == "A"}),
                 "car_pct": pct(sum(r["label"] == "A" for r in group), len(group)),
             }
             for name, group in buckets.items()
@@ -463,6 +475,7 @@ def analyze_existing_data_upgrade() -> dict:
             "n": len(mad),
             "movement_allowance_consumed": len(allowance_only),
             "inside_electrical_component": len(inside_electrical),
+            "inside_electrical_item_ids": sorted(x["item_id"] for x in inside_electrical),
             "remaining_beyond_electrical_min_m": min(allowance_margins) if allowance_margins else None,
             "remaining_beyond_electrical_max_m": max(allowance_margins) if allowance_margins else None,
             "inside_electrical_by_min_m": min(electrical_entries) if electrical_entries else None,
