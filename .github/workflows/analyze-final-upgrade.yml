@@ -4,6 +4,10 @@ on:
   push:
     paths:
       - "results/**/upgrade_*.jsonl"
+      - "results/upgrade_retrieval_audit.json"
+      - "results/existing_data_upgrade.json"
+      - "scripts/analyze_upgrade_results.py"
+      - ".github/workflows/analyze-final-upgrade.yml"
   workflow_dispatch:
 
 permissions:
