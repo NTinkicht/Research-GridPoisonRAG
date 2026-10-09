@@ -1,5 +1,5 @@
 name: Finalize NEECON Paper
-# four-review consensus refresh: 2026-10-09 accept-pass-2
+# four-review consensus refresh: 2026-10-09 accept-pass-3
 # acceptance-level analysis refresh: 2026-10-09
 
 on:
@@ -87,7 +87,7 @@ jobs:
           if n < 4:
               raise SystemExit(f"NEECON full-paper minimum not met: {n} pages < 4")
           PY
-      - name: Commit final analysis and paper
+      - name: Commit final analysis
         run: |
           git config user.name "gridpoisonrag-bot"
           git config user.email "actions@users.noreply.github.com"
@@ -96,12 +96,14 @@ jobs:
             results/stage_a_plain_3.jsonl \
             results/stage_a_bulletin_1.jsonl \
             results/stage_a_summary.json \
-            results/analysis_summary.json \
-            paper/generated_results.tex \
-            paper/GridPoisonRAG_NEECON2026.pdf
-          git commit -m "Finalize audited NEECON results and paper" || true
-          git pull --rebase origin main
-          git push origin HEAD:main
+            results/analysis_summary.json
+          if git diff --cached --quiet; then
+            echo "No analysis changes"
+          else
+            git commit -m "Finalize audited NEECON analysis"
+            git pull --rebase origin main
+            git push origin HEAD:main
+          fi
       - uses: actions/upload-artifact@v4
         with:
           name: GridPoisonRAG-NEECON2026-final
