@@ -115,7 +115,7 @@ def main():
     clean_t1 = across("B1", 1, "CRR")
     lines.append(
         f"Clean-RAG CRR was {range_pct(clean_t2)} on Tier~2 "
-        "(pre-specified threshold: 80\\%) and "
+        "(pre-specified interpretation gate: 80\\%, defined only for Tier~2) and "
         f"{range_pct(clean_t1)} on Tier~1."
     )
 
@@ -229,6 +229,8 @@ def main():
         k2_unexposed_n.append(len(unexposed))
 
     lines.append(
+        "Adding two poison paraphrases left Tier~1 exposure unchanged at 70.0\\% but raised Tier~2 "
+        "exposure from 3.3\\% to 76.7\\%; the stress condition therefore increased exposure only in Tier~2. "
         "At $k=5$, one poison was retrieved in 49 Tier~1 trials per model; only "
         f"{count_range(one_correct)} remained correct and direct attacker adoption was "
         f"{k5_k}/{k5_n} ({100*k5_k/k5_n:.1f}\\%; item-cluster 95\\% CI "
@@ -307,9 +309,9 @@ def main():
     )
     lines.append("\\begin{table*}[t]")
     lines.append(
-        "\\caption{Primary RQ3 comparison and violation counts. Brackets are descriptive 95\\% "
-        "item-cluster bootstrap intervals of trial-level BVR differences; McNemar tests count an "
-        "item as violating only when both phrasings violate.}"
+        "\\caption{Primary RQ3 comparison and violation counts. Positive pp values favor D3. Brackets are "
+        "descriptive 95\\% item-cluster bootstrap intervals of trial-level BVR differences; McNemar tests "
+        "count an item as violating only when both phrasings violate.}"
     )
     lines.append("\\label{tab:rq3}")
     lines.append("\\centering")
@@ -379,7 +381,10 @@ def main():
     lines.append(
         f"With at most {max_discordant} discordant items, the smallest attainable exact two-sided "
         "$p$ was 0.25 before adjustment, so the locked comparisons could not reach significance at "
-        "these violation rates. Because BVR counts non-commitment as a non-violation, note that across "
+        "these violation rates. Bootstrap intervals can exclude zero while McNemar remains non-significant "
+        "because the bootstrap estimates trial-level mean differences while clustering by item, whereas "
+        "McNemar dichotomizes an item only when both phrasings violate; sparse discordance makes the exact "
+        "test coarse. Because BVR counts non-commitment as a non-violation, note that across "
         f"the stress-condition defenses CRR was {100*min(all_crr):.1f}--{100*max(all_crr):.1f}\\% and "
         f"non-commitment was {100*min(all_ncr):.1f}--{100*max(all_ncr):.1f}\\%; D3@70 lowered CRR by "
         f"{abs(max(d3_crr_delta_pp)):.1f}--{abs(min(d3_crr_delta_pp)):.1f} points relative to B2."
