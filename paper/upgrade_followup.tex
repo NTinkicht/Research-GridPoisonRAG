@@ -6,6 +6,7 @@ After freezing the original Qwen/Mistral/Luna primary results, we locked additio
 \caption{Follow-up controls (percent). Gemini is an exploratory backup; BM25 P@2/CAR denotes exposure/conditional adoption.}
 \label{tab:upgrade-controls}
 \small
+\resizebox{\columnwidth}{!}{%
 \begin{tabular}{lrrrrr}
 \toprule
 Model & Commit CAR & BM25 P@2/CAR & C1 & C2 & C4 \\
@@ -14,7 +15,8 @@ Mistral Small 3.2 & 49.0 & 1.2/0.0 & 0.0 & 21.2 & 100.0 \\
 GPT-5.6 Luna & 16.3 & 1.2/0.0 & 0.0 & 18.8 & 100.0 \\
 Gemini 2.5 Flash-Lite (expl.) & 42.9 & 1.2/0.0 & 1.2 & 78.8 & 100.0 \\
 \bottomrule
-\end{tabular}
+\end{tabular}%
+}
 \end{table}
 
 The dense rerun reproduced 1920 historical generation rows with 0 poison-rank mismatches.
