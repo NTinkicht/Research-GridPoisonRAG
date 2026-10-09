@@ -63,14 +63,20 @@ jobs:
             --mode stagec \
             --out "results/${{ matrix.key }}/upgrade_stagec.jsonl"
       - name: Stage artifact
+        if: always()
         run: |
           mkdir -p "artifact/${{ matrix.key }}"
-          cp "results/${{ matrix.key }}"/upgrade_*.jsonl "artifact/${{ matrix.key }}/"
+          shopt -s nullglob
+          files=("results/${{ matrix.key }}"/upgrade_*.jsonl)
+          if [ ${#files[@]} -gt 0 ]; then
+            cp "${files[@]}" "artifact/${{ matrix.key }}/"
+          fi
       - uses: actions/upload-artifact@v4
+        if: always()
         with:
           name: "gridpoison-upgrade-${{ matrix.key }}"
           path: artifact/
-          if-no-files-found: error
+          if-no-files-found: warn
           retention-days: 30
 
   commit-results:
