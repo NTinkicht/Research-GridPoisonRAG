@@ -127,7 +127,7 @@ def latex_p(p: float) -> str:
     if p < 0.001:
         exponent = int(f"{p:.0e}".split("e")[1])
         mantissa = p / (10 ** exponent)
-        return f"{mantissa:.2f}\\\\times 10^{{{exponent}}}"
+        return f"{mantissa:.2f}\\times 10^{{{exponent}}}"
     return f"{p:.4f}"
 
 
