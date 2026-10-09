@@ -7,11 +7,23 @@
         "zero_clean_same_item": {
           "n_exposed": 9,
           "attacker_adoptions": 9,
+          "attacker_item_ids": [
+            "T1-007",
+            "T1-014",
+            "T1-016",
+            "T1-017",
+            "T1-019",
+            "T1-023",
+            "T1-025",
+            "T1-027",
+            "T1-034"
+          ],
           "car_pct": 100.0
         },
         "one_or_more_clean_same_item": {
           "n_exposed": 20,
           "attacker_adoptions": 0,
+          "attacker_item_ids": [],
           "car_pct": 0.0
         }
       },
@@ -19,11 +31,23 @@
         "zero_clean_same_item": {
           "n_exposed": 9,
           "attacker_adoptions": 9,
+          "attacker_item_ids": [
+            "T1-007",
+            "T1-014",
+            "T1-016",
+            "T1-017",
+            "T1-019",
+            "T1-023",
+            "T1-025",
+            "T1-027",
+            "T1-034"
+          ],
           "car_pct": 100.0
         },
         "one_or_more_clean_same_item": {
           "n_exposed": 20,
           "attacker_adoptions": 0,
+          "attacker_item_ids": [],
           "car_pct": 0.0
         }
       },
@@ -31,11 +55,23 @@
         "zero_clean_same_item": {
           "n_exposed": 9,
           "attacker_adoptions": 9,
+          "attacker_item_ids": [
+            "T1-007",
+            "T1-014",
+            "T1-016",
+            "T1-017",
+            "T1-019",
+            "T1-023",
+            "T1-025",
+            "T1-027",
+            "T1-034"
+          ],
           "car_pct": 100.0
         },
         "one_or_more_clean_same_item": {
           "n_exposed": 20,
           "attacker_adoptions": 0,
+          "attacker_item_ids": [],
           "car_pct": 0.0
         }
       }
@@ -78,6 +114,13 @@
       "n": 18,
       "movement_allowance_consumed": 13,
       "inside_electrical_component": 5,
+      "inside_electrical_item_ids": [
+        "T1-024",
+        "T1-025",
+        "T1-026",
+        "T1-027",
+        "T1-028"
+      ],
       "remaining_beyond_electrical_min_m": 0.030000000000000138,
       "remaining_beyond_electrical_max_m": 0.44999999999999996,
       "inside_electrical_by_min_m": 0.010000000000000009,
