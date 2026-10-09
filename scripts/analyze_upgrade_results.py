@@ -121,24 +121,34 @@ def fmt(x: float | None) -> str:
     return "--" if x is None else f"{x:.1f}"
 
 
+def latex_p(p: float) -> str:
+    if p == 0:
+        return "0"
+    if p < 0.001:
+        exponent = int(f"{p:.0e}".split("e")[1])
+        mantissa = p / (10 ** exponent)
+        return f"{mantissa:.2f}\\\\times 10^{{{exponent}}}"
+    return f"{p:.4f}"
+
+
 def write_tex(summary: dict) -> None:
     lines = [
         r"\subsection{Prospective Follow-up Controls}",
         (
-            "After the original primary analyses were frozen, we preregistered three targeted controls "
-            "to test whether the observed secondary $k=2$ effect reflected prompt-mediated abstention "
-            "and retrieval composition. These follow-ups are reported separately from the original "
-            "confirmatory families."
+            "After the original primary analyses were frozen, we preregistered targeted controls "
+            "to test whether the observed secondary $k=2$ effect reflected prompt-mediated abstention, "
+            "retriever choice, and retrieval composition. These follow-ups are reported separately "
+            "from the original confirmatory families."
         ),
         "",
         r"\begin{table}[t]",
         r"\centering",
-        r"\caption{Prospective final-upgrade controls (percent).}",
+        r"\caption{Prospective final-upgrade controls (percent). BM25 P@2/CAR reports poison exposure and conditional attacker adoption.}",
         r"\label{tab:upgrade-controls}",
         r"\small",
-        r"\begin{tabular}{lrrrr}",
+        r"\begin{tabular}{lrrrrr}",
         r"\toprule",
-        r"Model & Commit CAR & BM25 $k=2$ CAR & C1 CAR & C4 CAR \\",
+        r"Model & Commit CAR & BM25 P@2/CAR & C1 & C2 & C4 \\",
         r"\midrule",
     ]
     for key, label in MODELS.items():
@@ -157,8 +167,49 @@ def write_tex(summary: dict) -> None:
         r"\end{table}",
         "",
     ]
-    (ROOT / "paper" / "upgrade_followup.tex").write_text("\n".join(lines) + "\n", encoding="utf-8")
 
+    retrieval = summary["retrieval_mechanism"]
+    lines.append(
+        f"The dense rerun reproduced {retrieval['dense_rows_checked']} historical generation rows "
+        f"with {retrieval['dense_rank_drift_count']} poison-rank mismatches."
+    )
+
+    prompt_parts = []
+    for key, label in MODELS.items():
+        m = summary["models"][key]["commit"]
+        prompt_parts.append(
+            f"{label}: {fmt(m['commit_adoption_pct'])}\\% CAR "
+            f"($p={latex_p(m['paired_exact_p'])}$; {m['interpretation']})"
+        )
+    lines.append(
+        "When the prompt required a numeric commitment, the paired exposed-trial results were "
+        + "; ".join(prompt_parts)
+        + "."
+    )
+
+    if summary["overall"]["strong_composition_hypothesis_falsified"]:
+        lines.append(
+            "The strong pre-stated composition hypothesis was falsified under its prospective rule: "
+            "at least one model crossed the 20\\% adoption boundary in C1/C2 or failed to exceed "
+            "50\\% adoption in C4. The individual C1, C2, and C4 values are shown rather than "
+            "replacing the rule with a post-hoc threshold."
+        )
+    else:
+        lines.append(
+            "All three models satisfied the pre-stated strong composition thresholds: C1 and C2 "
+            "remained below 20\\% attacker adoption and C4 exceeded 50\\%."
+        )
+
+    lines.append(
+        "BM25 is reported as a retriever sensitivity rather than a direct robustness claim because "
+        "its poison-exposure rate differs from dense retrieval; CAR is therefore interpreted together "
+        "with Poison@$k$."
+    )
+    lines.append("")
+
+    (ROOT / "paper" / "upgrade_followup.tex").write_text(
+        "\n".join(lines) + "\n", encoding="utf-8"
+    )
 
 
 def clean_same_item_count(top10: list[dict], item_id: str, k: int) -> int:
