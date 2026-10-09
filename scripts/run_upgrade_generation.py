@@ -104,58 +104,92 @@ def dense_hits(retriever, query, k, extra=None):
     return [(h.rank, h.score, h.document) for h in retriever.search(query, k, extra_documents=extra or [])]
 
 
-def run_commit(client, items, clean, poisons, model):
+def load_checkpoint(out_path: Path) -> tuple[list[dict], set[tuple]]:
+    rows = read_jsonl(out_path) if out_path.exists() else []
+    seen = {
+        (r["condition"], r["item_id"], r["phrasing"], int(r["k"]))
+        for r in rows
+    }
+    return rows, seen
+
+
+def save_checkpoint(out_path: Path, rows: list[dict]) -> None:
+    out_path.parent.mkdir(parents=True, exist_ok=True)
+    write_jsonl(out_path, rows)
+
+
+def run_commit(client, items, clean, poisons, model, out_path: Path):
     retriever = DenseRetriever(clean, "sentence-transformers/all-MiniLM-L6-v2")
-    rows = []
+    rows, seen = load_checkpoint(out_path)
     for item in items:
+        changed = False
         poison = one_poison(poisons, item["item_id"])
         for phrasing, query in [("formal", item["question_formal"]), ("field", item["question_field"])]:
             for condition, extra in [
                 ("UPGRADE_COMMIT_B1", []),
                 ("UPGRADE_COMMIT_B2_P1", [poison]),
             ]:
+                key = (condition, item["item_id"], phrasing, 5)
+                if key in seen:
+                    continue
                 hits = dense_hits(retriever, query, 5, extra)
                 answer = client.chat(
                     messages(COMMIT_SYSTEM, query, [d["text"] for _r, _s, d in hits]),
                     temperature=0.0,
                 )
-                rows.append(
-                    attach_api(result_row(item, model, condition, phrasing, 5, answer, hits, "commit"), client)
+                row = attach_api(
+                    result_row(item, model, condition, phrasing, 5, answer, hits, "commit"),
+                    client,
                 )
+                rows.append(row)
+                seen.add(key)
+                changed = True
+        if changed:
+            save_checkpoint(out_path, rows)
     return rows
 
-
-def run_bm25(client, items, clean, poisons, model):
+def run_bm25(client, items, clean, poisons, model, out_path: Path):
     retriever = BM25Retriever(clean)
-    rows = []
+    rows, seen = load_checkpoint(out_path)
     for item in items:
+        changed = False
         poison = one_poison(poisons, item["item_id"])
         for phrasing, query in [("formal", item["question_formal"]), ("field", item["question_field"])]:
             for k in (2, 5):
+                condition = f"UPGRADE_BM25_K{k}"
+                key = (condition, item["item_id"], phrasing, k)
+                if key in seen:
+                    continue
                 hits = retriever.search(query, k, [poison])
                 answer = client.chat(
                     messages(BASE_SYSTEM, query, [d["text"] for _r, _s, d in hits]),
                     temperature=0.0,
                 )
-                rows.append(
-                    attach_api(
-                        result_row(item, model, f"UPGRADE_BM25_K{k}", phrasing, k, answer, hits, "base"),
-                        client,
-                    )
+                row = attach_api(
+                    result_row(item, model, condition, phrasing, k, answer, hits, "base"),
+                    client,
                 )
+                rows.append(row)
+                seen.add(key)
+                changed = True
+        if changed:
+            save_checkpoint(out_path, rows)
     return rows
 
-
-def run_stage_c(client, items, clean, poisons, model):
+def run_stage_c(client, items, clean, poisons, model, out_path: Path):
     clean_by_id = {d["doc_id"]: d for d in clean}
     clean_by_item = {}
     for d in clean:
         clean_by_item.setdefault(d.get("item_id"), []).append(d)
-    rows = []
+    rows, seen = load_checkpoint(out_path)
     for item in items:
+        changed = False
         poison = one_poison(poisons, item["item_id"])
         twin = clean_by_id[poison["paired_clean_doc_id"]]
-        same = [d for d in clean_by_item[item["item_id"]] if d["doc_id"] != twin["doc_id"] and d.get("kind") == "support"]
+        same = [
+            d for d in clean_by_item[item["item_id"]]
+            if d["doc_id"] != twin["doc_id"] and d.get("kind") == "support"
+        ]
         other_support = sorted(same, key=lambda d: d["doc_id"])[0]
         distractors = [
             d for d in clean
@@ -174,18 +208,27 @@ def run_stage_c(client, items, clean, poisons, model):
             "C4": [poison],
         }
         for cname, docs in raw_contexts.items():
+            condition = f"UPGRADE_STAGE_{cname}"
+            key = (condition, item["item_id"], "formal", len(docs))
+            if key in seen:
+                continue
             if cname in {"C1", "C2", "C3"} and parity:
                 docs = list(reversed(docs))
             hits = [(i + 1, None, d) for i, d in enumerate(docs)]
-            answer = client.chat(messages(BASE_SYSTEM, query, [d["text"] for d in docs]), temperature=0.0)
-            rows.append(
-                attach_api(
-                    result_row(item, model, f"UPGRADE_STAGE_{cname}", "formal", len(docs), answer, hits, "base"),
-                    client,
-                )
+            answer = client.chat(
+                messages(BASE_SYSTEM, query, [d["text"] for d in docs]),
+                temperature=0.0,
             )
+            row = attach_api(
+                result_row(item, model, condition, "formal", len(docs), answer, hits, "base"),
+                client,
+            )
+            rows.append(row)
+            seen.add(key)
+            changed = True
+        if changed:
+            save_checkpoint(out_path, rows)
     return rows
-
 
 def main():
     p = argparse.ArgumentParser()
@@ -205,15 +248,16 @@ def main():
     clean = read_jsonl(ROOT / "corpus/clean_documents.jsonl")
     poisons = read_jsonl(ROOT / "corpus/poison_variants.jsonl")
 
+    out_path = ROOT / args.out
     if args.mode == "commit":
-        rows = run_commit(client, items, clean, poisons, args.model)
+        rows = run_commit(client, items, clean, poisons, args.model, out_path)
     elif args.mode == "bm25":
-        rows = run_bm25(client, items, clean, poisons, args.model)
+        rows = run_bm25(client, items, clean, poisons, args.model, out_path)
     else:
-        rows = run_stage_c(client, items, clean, poisons, args.model)
+        rows = run_stage_c(client, items, clean, poisons, args.model, out_path)
 
-    write_jsonl(ROOT / args.out, rows)
-    print(f"Wrote {len(rows)} rows to {args.out}")
+    save_checkpoint(out_path, rows)
+    print(f"Wrote {len(rows)} rows to {out_path}")
 
 
 if __name__ == "__main__":
