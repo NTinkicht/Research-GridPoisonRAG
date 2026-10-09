@@ -1,0 +1,72 @@
+name: Finalize Follow-up With Gemini Backup
+
+on:
+  workflow_dispatch:
+  push:
+    branches:
+      - main
+    paths:
+      - ".github/finalize-gemini-trigger.txt"
+
+permissions:
+  contents: write
+  actions: read
+
+concurrency:
+  group: finalize-followup-gemini
+  cancel-in-progress: false
+
+jobs:
+  finalize:
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+    env:
+      GH_TOKEN: ${{ github.token }}
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: main
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+      - name: Install project
+        run: python -m pip install -e .
+      - name: Recover completed Mistral and Luna follow-up artifacts
+        run: |
+          gh run download 37928683708 \
+            -n gridpoison-upgrade-mistralai_mistral-small-3.2-24b-instruct \
+            -D results
+          gh run download 37928683708 \
+            -n gridpoison-upgrade-openai_gpt-5.6-luna \
+            -D results
+      - name: Verify completed follow-up matrices
+        run: |
+          test "$(wc -l < results/mistralai_mistral-small-3.2-24b-instruct/upgrade_commit.jsonl)" -eq 320
+          test "$(wc -l < results/mistralai_mistral-small-3.2-24b-instruct/upgrade_bm25.jsonl)" -eq 320
+          test "$(wc -l < results/mistralai_mistral-small-3.2-24b-instruct/upgrade_stagec.jsonl)" -eq 400
+          test "$(wc -l < results/openai_gpt-5.6-luna/upgrade_commit.jsonl)" -eq 320
+          test "$(wc -l < results/openai_gpt-5.6-luna/upgrade_bm25.jsonl)" -eq 320
+          test "$(wc -l < results/openai_gpt-5.6-luna/upgrade_stagec.jsonl)" -eq 400
+          test "$(wc -l < results/google_gemini-2.5-flash-lite/main_b2_p1.jsonl)" -eq 160
+          test "$(wc -l < results/google_gemini-2.5-flash-lite/upgrade_commit.jsonl)" -eq 320
+          test "$(wc -l < results/google_gemini-2.5-flash-lite/upgrade_bm25.jsonl)" -eq 320
+          test "$(wc -l < results/google_gemini-2.5-flash-lite/upgrade_stagec.jsonl)" -eq 400
+      - name: Analyze completed controls and generate paper insert
+        run: python scripts/analyze_upgrade_results.py
+      - name: Commit recovered controls and final analysis
+        run: |
+          git config user.name "gridpoisonrag-bot"
+          git config user.email "actions@users.noreply.github.com"
+          git add \
+            results/mistralai_mistral-small-3.2-24b-instruct/upgrade_*.jsonl \
+            results/openai_gpt-5.6-luna/upgrade_*.jsonl \
+            results/upgrade_analysis.json \
+            paper/upgrade_followup.tex \
+            paper/main.tex
+          if git diff --cached --quiet; then
+            echo "No finalization changes to commit"
+            exit 0
+          fi
+          git commit -m "Finalize prospective controls with exploratory Gemini backup"
+          git pull --rebase origin main
+          git push origin HEAD:main
