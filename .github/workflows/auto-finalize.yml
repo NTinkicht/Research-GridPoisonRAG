@@ -1,9 +1,6 @@
 name: Auto Finalize Experiments
 
 on:
-  push:
-    paths:
-      - "src/gridpoisonrag/providers.py"
   workflow_dispatch:
 
 permissions:
