@@ -1,9 +1,6 @@
 name: Final Upgrade Experiments
 
 on:
-  push:
-    paths:
-      - ".github/workflows/final-upgrade.yml"
   workflow_dispatch:
 
 permissions:
