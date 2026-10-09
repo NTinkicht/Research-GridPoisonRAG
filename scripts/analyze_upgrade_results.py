@@ -205,6 +205,52 @@ def write_tex(summary: dict) -> None:
         "its poison-exposure rate differs from dense retrieval; CAR is therefore interpreted together "
         "with Poison@$k$."
     )
+
+    existing = summary["existing_data_upgrade"]
+    mad = existing["osha_mad"]
+    prc = existing["prc024"]
+    tier2 = existing["tier2"]
+    prc_pct = 100.0 * prc["shortening_fractions"][0] if len(prc["shortening_fractions"]) == 1 else None
+    tier2_pct = (
+        100.0 * (tier2["poison_to_record_ratios"][0] - 1.0)
+        if len(tier2["poison_to_record_ratios"]) == 1
+        else None
+    )
+    consequence_sentence = (
+        f"A separate post-hoc benchmark-consequence mapping classified {mad['n']} OSHA MAD poisons: "
+        f"{mad['movement_allowance_crossed']} fell below the benchmarked inadvertent-movement allowance "
+        f"and {mad['electrical_component_consumed']} consumed part of the electrical-distance component "
+        "while remaining at or above that allowance."
+    )
+    if prc_pct is not None:
+        consequence_sentence += (
+            f" All {prc['n']} PRC-024-3 poisons shortened the benchmark no-trip time by {prc_pct:.0f}\\%."
+        )
+    if tier2_pct is not None:
+        consequence_sentence += (
+            f" All {tier2['n']} fictional Tier-2 poisons exceeded the record limit by {tier2_pct:.0f}\\%."
+        )
+    lines.append(consequence_sentence)
+    lines.append(
+        "These are benchmark consequence classes, not professional-engineering or physical-safety determinations."
+    )
+
+    sev_parts_40 = []
+    sev_parts_70 = []
+    for key, label in MODELS.items():
+        d40 = existing["severity_bvr_delta_pp"][key]["40"]
+        d70 = existing["severity_bvr_delta_pp"][key]["70"]
+        sev_parts_40.append(f"{label} {d40:+.3g} pp")
+        sev_parts_70.append(f"{label} {d70:+.3g} pp")
+    lines.append(
+        "The post-hoc severity-prioritized D3 what-if did not improve coverage monotonically. "
+        "Relative to the original hash selection at matched realized coverage, BVR changed by "
+        + ", ".join(sev_parts_40)
+        + " at 40\\%, and "
+        + ", ".join(sev_parts_70)
+        + " at 70\\%. Tier-3 hash coverage was held fixed, so this comparison changes only "
+        "which poisonable records are covered."
+    )
     lines.append("")
 
     (ROOT / "paper" / "upgrade_followup.tex").write_text(
@@ -293,6 +339,55 @@ def analyze_retrieval_mechanism() -> dict:
     }
 
 
+
+
+def analyze_existing_data_upgrade() -> dict:
+    path = ROOT / "results" / "existing_data_upgrade.json"
+    if not path.exists():
+        raise SystemExit(f"Missing existing-data upgrade result: {path}")
+    data = json.loads(path.read_text(encoding="utf-8"))
+
+    consequences = data["consequence_classification"]
+    mad = [x for x in consequences if x["class"] == "osha_minimum_approach_distance"]
+    prc = [x for x in consequences if x["class"] == "prc024_no_trip_time"]
+    tier2 = [x for x in consequences if x["class"] == "fictional_asset_limit"]
+
+    deltas = {}
+    for model_key in MODELS:
+        deltas[model_key] = {}
+        for cov in ("40", "70"):
+            sev = data["models"][model_key][cov]["severity_prioritized"]["attack"]["bvr_pct"]
+            baseline = data["models"][model_key][cov]["hash_baseline"]["attack"]["bvr_pct"]
+            deltas[model_key][cov] = sev - baseline
+
+    return {
+        "osha_mad": {
+            "n": len(mad),
+            "movement_allowance_crossed": sum(
+                x.get("mad_consequence") == "movement_allowance_crossed" for x in mad
+            ),
+            "electrical_component_consumed": sum(
+                x.get("mad_consequence") == "electrical_component_consumed" for x in mad
+            ),
+        },
+        "prc024": {
+            "n": len(prc),
+            "shortening_fractions": sorted(
+                {round(float(x["shortening_fraction"]), 12) for x in prc}
+            ),
+        },
+        "tier2": {
+            "n": len(tier2),
+            "poison_to_record_ratios": sorted(
+                {round(float(x["poison_to_record_ratio"]), 12) for x in tier2}
+            ),
+        },
+        "severity_bvr_delta_pp": deltas,
+        "tier3_false_flag_policy": (
+            "Tier-3 hash coverage held fixed so the what-if changes only poisonable-record selection."
+        ),
+    }
+
 def ensure_paper_include() -> None:
     main = ROOT / "paper" / "main.tex"
     text = main.read_text(encoding="utf-8")
@@ -306,7 +401,11 @@ def ensure_paper_include() -> None:
 
 
 def main() -> None:
-    summary = {"retrieval_mechanism": analyze_retrieval_mechanism(), "models": {}}
+    summary = {
+        "retrieval_mechanism": analyze_retrieval_mechanism(),
+        "existing_data_upgrade": analyze_existing_data_upgrade(),
+        "models": {},
+    }
     for key in MODELS:
         model_dir = ROOT / "results" / key
         needed = [
