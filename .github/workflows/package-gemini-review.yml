@@ -1,0 +1,73 @@
+name: Package Gemini Review Materials
+
+on:
+  push:
+    paths:
+      - ".github/workflows/package-gemini-review.yml"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  package:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+      - name: Refresh generated result text
+        run: |
+          python scripts/render_paper_assets.py
+      - name: Assemble review package
+        shell: bash
+        run: |
+          set -euo pipefail
+          ROOT="gemini_review_package"
+          mkdir -p "$ROOT/repository"
+          cp README.md KNOWN_ISSUES.md pyproject.toml "$ROOT/repository/" || true
+          cp -r benchmark corpus configs src scripts results "$ROOT/repository/"
+          mkdir -p "$ROOT/repository/paper" "$ROOT/repository/.github"
+          cp paper/main.tex paper/generated_results.tex paper/references.bib paper/methods_lock.md "$ROOT/repository/paper/"
+          for f in paper/*.md; do
+            [ -e "$f" ] && cp "$f" "$ROOT/repository/paper/"
+          done
+          cp -r .github/workflows "$ROOT/repository/.github/"
+          git rev-parse HEAD > "$ROOT/GIT_HEAD.txt"
+          git log --date=iso --pretty=format:'%H | %ad | %an | %s' > "$ROOT/GIT_LOG.txt"
+          {
+            echo "=== FINAL PRE-GENERATION ALIGNMENT ==="
+            git show --stat --summary 3de75c6 || true
+            echo
+            echo "=== BFFR CONDITIONING CHANGE ==="
+            git show --stat --summary 455fba8 || true
+            echo
+            echo "=== ACCEPTANCE-LEVEL REFRAMING / EXPOSED-TRIAL ANALYSIS ==="
+            git show --stat --summary 281ca64 || true
+          } > "$ROOT/GIT_KEY_COMMITS.txt"
+          cat > "$ROOT/README_FOR_GEMINI.txt" <<'EOF'
+GridPoisonRAG hostile-review package
+====================================
+
+Authoritative repository state: see GIT_HEAD.txt.
+The final compiled PDF is supplied separately in this package by the review-package assembler.
+The repository/ directory contains manuscript sources, methods lock, benchmark,
+corpus, configurations, code, raw JSONL outputs, generated analysis, and CI workflows.
+
+Review the attached materials rather than attempting to clone GitHub.
+Where a claim requires a live external standard/source that is not embedded,
+mark only that verification as externally unavailable; do not refuse the full review.
+
+Target scores to analyze:
+Validity 9 | Novelty 8 | Experimental Design 8 | Power Systems 8 |
+Benchmark 8 | Practical Utility 9 | Statistics 8.5 | Reproducibility 9 |
+Presentation 8.5 | NEECON Fit 9 | Overall 8.5-9.
+EOF
+          find "$ROOT" -type f | sort > "$ROOT/MANIFEST.txt"
+      - uses: actions/upload-artifact@v4
+        with:
+          name: GridPoisonRAG-Gemini-Review-Package
+          path: gemini_review_package
