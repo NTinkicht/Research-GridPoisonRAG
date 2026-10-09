@@ -191,6 +191,7 @@ A structured check therefore helps only when record authority, jurisdiction/inte
 \section{Limitations}
 GridPoison-100 is a controlled template benchmark, not a deployed utility corpus: documents carry explicit identifiers, minimal-pair poisons make conflicts visible, and the base prompt sanctions abstention.
 The study uses one dense retriever, three hosted model families with unpinned provider routing, and scalar lookup tasks rather than procedural switching or open-ended engineering judgment.
+The embedding-model revision was not pinned; the zero-rank-drift rerun on the frozen corpus verifies the realized retrieval contexts but does not guarantee future dependency stability.
 GPT-5.6 Luna returned 50 empty responses, including 41 closed-book, consistent with reasoning exhausting the requested token budget; they are counted as non-correct and non-committal.
 
 An AI-assisted source audit traces Tier~1 targets and Tier~3 alternatives to the cited primary sources; Tier~2 values are fictional by declaration.
