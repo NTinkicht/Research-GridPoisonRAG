@@ -120,7 +120,11 @@ def main():
         "Exposure is deterministic for the shared retriever; CRR and CAR are ranges across models."
     )
     lines.append("\\begin{table*}[t]")
-    lines.append("\\caption{Natural-retrieval outcomes (\\%; $k=5$ unless noted).}")
+    lines.append(
+        "\\caption{Natural-retrieval outcomes (\\%; $k=5$ unless noted). "
+        "CAR is conditional on exposure; exposed Tier~1/Tier~2 trials per model are "
+        "49/3 (1 poison), 49/69 (3 poisons), 47/7 (bulletin), and 26/3 ($k=2$).}"
+    )
     lines.append("\\label{tab:natural}")
     lines.append("\\centering")
     lines.append("\\scriptsize")
@@ -167,16 +171,48 @@ def main():
     k2_exposed = [
         analysis["natural_exposed"][f"{m}|B2_P1_K2|T1"]["n_exposed"] for m in models
     ]
-    wir_adopted = [analysis["wrong_in_range"][m]["n_adopted_exposed"] for m in models]
-    wir_exposed = [analysis["wrong_in_range"][m]["n_exposed"] for m in models]
+    k5_entry = analysis["natural_exposed"][f"{models[0]}|B2_P1|T1"]
+    k2_entry = analysis["natural_exposed"][f"{models[0]}|B2_P1_K2|T1"]
+    k2_sets = [
+        tuple(analysis["natural_exposed"][f"{m}|B2_P1_K2|T1"].get("attacker_trial_keys", []))
+        for m in models
+    ]
+    same_k2_set = bool(k2_sets) and all(x == k2_sets[0] for x in k2_sets)
+    k5_ci = (
+        f"[{100*k5_entry['car_cluster_lo95']:.1f}, {100*k5_entry['car_cluster_hi95']:.1f}]"
+        if k5_entry.get("car_cluster_lo95") is not None else None
+    )
+    k2_ci = (
+        f"[{100*k2_entry['car_cluster_lo95']:.1f}, {100*k2_entry['car_cluster_hi95']:.1f}]"
+        if k2_entry.get("car_cluster_lo95") is not None else None
+    )
+    k2_same = "the same " if same_k2_set else ""
     lines.append(
         "At $k=5$, one poison was retrieved in 49 Tier~1 trials per model; only "
-        f"{count_range(one_correct)} remained correct, while direct attacker adoption was 4.1\\% of exposed trials. "
-        "Reducing retrieval depth to $k=2$ changed the evidence balance: all three models adopted the attacker value "
-        f"in {count_range(k2_attacker)} of {count_range(k2_exposed)} exposed Tier~1 trials (CAR 34.6\\%). "
-        "The wrong-but-in-range poison was copied in only "
-        f"{count_range(wir_adopted)} of {count_range(wir_exposed)} exposed trials per model."
+        f"{count_range(one_correct)} remained correct, while direct attacker adoption was 4.1\\% "
+        + (f"(item-cluster 95\\% CI {k5_ci}) " if k5_ci else "")
+        + "of exposed trials. "
+        "In the pre-specified secondary $k=2$ condition, all three models adopted the attacker value in "
+        f"{k2_same}{count_range(k2_attacker)} of {count_range(k2_exposed)} exposed Tier~1 trials "
+        f"(CAR 34.6\\%{'; item-cluster 95\\% CI ' + k2_ci if k2_ci else ''})."
     )
+    if analysis["wrong_in_range"][models[0]].get("by_tier"):
+        t1_adopted = [analysis["wrong_in_range"][m]["by_tier"]["T1"]["n_adopted_exposed"] for m in models]
+        t1_exposed = [analysis["wrong_in_range"][m]["by_tier"]["T1"]["n_exposed"] for m in models]
+        t2_adopted = [analysis["wrong_in_range"][m]["by_tier"]["T2"]["n_adopted_exposed"] for m in models]
+        t2_exposed = [analysis["wrong_in_range"][m]["by_tier"]["T2"]["n_exposed"] for m in models]
+        lines.append(
+            "The wrong-but-in-range poison was copied in "
+            f"{count_range(t1_adopted)} of {count_range(t1_exposed)} exposed Tier~1 trials per model "
+            f"and {count_range(t2_adopted)} of {count_range(t2_exposed)} exposed Tier~2 trials."
+        )
+    else:
+        wir_adopted = [analysis["wrong_in_range"][m]["n_adopted_exposed"] for m in models]
+        wir_exposed = [analysis["wrong_in_range"][m]["n_exposed"] for m in models]
+        lines.append(
+            "The wrong-but-in-range poison was copied in only "
+            f"{count_range(wir_adopted)} of {count_range(wir_exposed)} exposed trials per model."
+        )
 
     lines.append("\\subsection{Fixed-context exposure (RQ2)}")
     upper_t1 = analysis["primary_rq2_stage_b"][f"{models[0]}|STAGE_B_FIRST|T1"]["exact_hi95"]
@@ -220,7 +256,11 @@ def main():
         "Table~\\ref{tab:rq3} reports paired BVR reduction in percentage points; positive values favor D3."
     )
     lines.append("\\begin{table*}[t]")
-    lines.append("\\caption{Primary RQ3 comparison and violation counts. Brackets are 95\\% item-cluster bootstrap intervals.}")
+    lines.append(
+        "\\caption{Primary RQ3 comparison and violation counts. Brackets are descriptive 95\\% "
+        "item-cluster bootstrap intervals of trial-level BVR differences; McNemar tests count an "
+        "item as violating only when both phrasings violate.}"
+    )
     lines.append("\\label{tab:rq3}")
     lines.append("\\centering")
     lines.append("\\scriptsize")
@@ -254,18 +294,36 @@ def main():
         if abs(min(pvals) - max(pvals)) < 1e-12
         else f"{min(pvals):.1f}--{max(pvals):.1f}"
     )
+    b2_counts = [analysis["rq3_counts"][m]["B2_P3_STRESS"]["n_violations"] for m in models]
+    d1_counts = [analysis["rq3_counts"][m]["D1_P3"]["n_violations"] for m in models]
+    d2_counts = [analysis["rq3_counts"][m]["D2_P3"]["n_violations"] for m in models]
+    d70_counts = [analysis["rq3_counts"][m]["D3_P3_70"]["n_violations"] for m in models]
     lines.append(
-        "Against vanilla poisoned RAG, D3@70 removed 6/7, 5/6, and 6/8 violating trials for "
-        "Mistral, Qwen, and GPT-5.6 Luna, respectively, and full coverage removed all of them. "
+        "Against B2, which uses the same conflict-abstaining base prompt, D3@70 removed 6/7, 5/6, "
+        "and 6/8 violating trials for Mistral, Qwen, and GPT-5.6 Luna, respectively; full coverage "
+        "removed the remaining violations by construction. "
         f"D2 increased Qwen BVR by {-100*qwen_d2:.1f} points relative to B2. "
-        f"Only 5--8 trials violated per model and the primary McNemar comparisons had at most {max_discordant} "
-        "discordant items; all six Holm-adjusted tests therefore remained non-significant "
-        f"($p_{{\\mathrm{{Holm}}}}={p_text}$). "
+        f"Violating trials per model were {count_range(b2_counts)} under B2, {count_range(d1_counts)} under D1, "
+        f"{count_range(d2_counts)} under D2, and {count_range(d70_counts)} under D3@70. "
+        f"The primary McNemar comparisons had at most {max_discordant} discordant items and all six "
+        f"Holm-adjusted tests were non-significant ($p_{{\\mathrm{{Holm}}}}={p_text}$). "
         "The defense comparisons are descriptive."
     )
+    sens = analysis.get("mcnemar_any_phrasing", [])
+    if sens:
+        min_sens = min(x["p_holm"] for x in sens)
+        lines.append(
+            f"Counting an item as violating when either phrasing violates also leaves all six "
+            f"comparisons non-significant (minimum $p_{{\\mathrm{{Holm}}}}={min_sens:.3f}$)."
+        )
 
     lines.append("\\subsection{Legitimate-conflict cost}")
+    clean_conflict_correct = [
+        round(group("B1_CONFLICT", m, 3)["CRR"] * group("B1_CONFLICT", m, 3)["n_trials"])
+        for m in models
+    ]
     lines.append(
+        f"Clean RAG answered {count_range(clean_conflict_correct)} of 40 legitimate-conflict trials correctly. "
         f"The structured record equals the benchmark target for {poisonable_record_matches}/80 poisonable items, "
         f"but intentionally stores a generic alternative for {tier3_generic}/20 Tier~3 items. "
         "BFFR therefore measures a controlled record-scope gap and is conditioned on clean-RAG correctness."

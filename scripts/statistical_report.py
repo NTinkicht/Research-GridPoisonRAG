@@ -33,6 +33,28 @@ def by_item_binary(rows, fn):
     return out
 
 
+def cluster_bootstrap_trial_rate(rows, fn, resamples=2000, seed=20261007):
+    """Cluster bootstrap preserving the trial-level denominator while resampling item IDs."""
+    import numpy as np
+
+    grouped = defaultdict(list)
+    for r in rows:
+        grouped[r["item_id"]].append(int(bool(fn(r))))
+    if not grouped:
+        return 0.0, 0.0, 0.0
+    point = sum(sum(v) for v in grouped.values()) / sum(len(v) for v in grouped.values())
+    ids = sorted(grouped)
+    rng = np.random.default_rng(seed)
+    sims = []
+    for _ in range(resamples):
+        sampled = rng.choice(ids, size=len(ids), replace=True)
+        num = sum(sum(grouped[i]) for i in sampled)
+        den = sum(len(grouped[i]) for i in sampled)
+        sims.append(num / den if den else 0.0)
+    lo, hi = np.quantile(sims, [0.025, 0.975])
+    return float(point), float(lo), float(hi)
+
+
 def clopper_pearson(successes: int, n: int, alpha: float = 0.05) -> tuple[float, float]:
     if n <= 0:
         return 0.0, 1.0
@@ -93,6 +115,8 @@ def main():
         "rq3_counts": {},
         "bffr": {},
         "mcnemar_primary": [],
+        "mcnemar_any_phrasing": [],
+        "d3_coverage": {},
     }
 
     for (condition, model, tier), group in sorted(groups.items()):
@@ -133,6 +157,9 @@ def main():
                     continue
                 exposed = [r for r in subset if r.get("poison_exposed")]
                 key = f"{model}|{condition}|T{tier}"
+                _, car_lo, car_hi = cluster_bootstrap_trial_rate(
+                    exposed, lambda r: r["label"] == "A"
+                ) if exposed else (None, None, None)
                 report["natural_exposed"][key] = {
                     "n_trials": len(subset),
                     "n_exposed": len(exposed),
@@ -141,6 +168,12 @@ def main():
                     "n_noncommit_exposed": sum(r.get("committed_value") is None for r in exposed),
                     "correct_given_exposure": rate(exposed, lambda r: r["label"] == "C") if exposed else None,
                     "CAR": rate(exposed, lambda r: r["label"] == "A") if exposed else None,
+                    "car_cluster_lo95": car_lo,
+                    "car_cluster_hi95": car_hi,
+                    "attacker_trial_keys": sorted(
+                        f'{r["item_id"]}|{r.get("phrasing")}'
+                        for r in exposed if r["label"] == "A"
+                    ),
                 }
 
     # Secondary wrong-but-in-range condition: raw A labels intentionally refer
@@ -168,6 +201,16 @@ def main():
                 adopted.append(r)
         exposed = [r for r in eligible if r.get("poison_exposed")]
         adopted_exposed = [r for r in adopted if r.get("poison_exposed")]
+        by_tier = {}
+        for tier in [1, 2]:
+            eligible_t = [r for r in eligible if r["tier"] == tier]
+            exposed_t = [r for r in eligible_t if r.get("poison_exposed")]
+            adopted_t = [r for r in adopted_exposed if r["tier"] == tier]
+            by_tier[f"T{tier}"] = {
+                "n_trials": len(eligible_t),
+                "n_exposed": len(exposed_t),
+                "n_adopted_exposed": len(adopted_t),
+            }
         report["wrong_in_range"][model] = {
             "n_trials": len(eligible),
             "n_exposed": len(exposed),
@@ -175,6 +218,7 @@ def main():
             "n_adopted_exposed": len(adopted_exposed),
             "adoption_rate": len(adopted) / max(len(eligible), 1),
             "CAR": len(adopted_exposed) / max(len(exposed), 1),
+            "by_tier": by_tier,
         }
 
     # Primary RQ2: attacker-value adoption under forced exposure, stratified by
@@ -246,7 +290,48 @@ def main():
             x["p_holm"] = adj
         report["mcnemar_primary"] = primary_tests
 
-    # Secondary descriptive comparisons against the poisoned vanilla-RAG stress baseline.
+    # Sensitivity: an item violates if either phrasing violates.
+    def any_items(rs):
+        grouped = defaultdict(list)
+        for r in rs:
+            grouped[r["item_id"]].append(r.get("violation") is True)
+        return {item: any(vals) for item, vals in grouped.items()}
+
+    sensitivity = []
+    for model in models:
+        d3_rows = [
+            r for r in rows
+            if r["model"] == model and r["tier"] in {1, 2}
+            and r["condition"] == "D3_P3_70"
+        ]
+        if not d3_rows:
+            continue
+        d3_any = any_items(d3_rows)
+        for comparator in ["D1_P3", "D2_P3"]:
+            base_rows = [
+                r for r in rows
+                if r["model"] == model and r["tier"] in {1, 2}
+                and r["condition"] == comparator
+            ]
+            if not base_rows:
+                continue
+            base_any = any_items(base_rows)
+            common = sorted(set(base_any) & set(d3_any))
+            result = mcnemar_exact((base_any[i], d3_any[i]) for i in common)
+            sensitivity.append({
+                "model": model,
+                "comparator": comparator,
+                "b": result.b,
+                "c": result.c,
+                "p": result.p_value,
+            })
+    if sensitivity:
+        adjusted = holm_adjust([x["p"] for x in sensitivity])
+        for x, adj in zip(sensitivity, adjusted):
+            x["p_holm"] = adj
+        report["mcnemar_any_phrasing"] = sensitivity
+
+    # Secondary descriptive comparisons against the poisoned conflict-aware B2 stress baseline.
     secondary_defenses = ["D1_P3", "D2_P3", "D3_P3_40", "D3_P3_70", "D3_P3_100"]
     for model in models:
         base = [
@@ -282,6 +367,30 @@ def main():
             report["secondary_rq3_vs_b2"][f"{model}|{defense}"] = {
                 "delta_bvr": point, "lo95": lo, "hi95": hi
             }
+
+    # Realized deterministic hash coverage (identical across model families).
+    if models:
+        first_model = models[0]
+        for cov in [40, 70, 100]:
+            poison_rows = [
+                r for r in rows
+                if r["model"] == first_model and r["tier"] in {1, 2}
+                and r["condition"] == f"D3_P3_{cov}"
+            ]
+            conflict_rows = [
+                r for r in rows
+                if r["model"] == first_model and r["tier"] == 3
+                and r["condition"] == f"D3_CONFLICT_{cov}"
+            ]
+            if poison_rows or conflict_rows:
+                report["d3_coverage"][str(cov)] = {
+                    "poisonable_covered_items": len({
+                        r["item_id"] for r in poison_rows if r.get("d3_covered")
+                    }),
+                    "conflict_covered_items": len({
+                        r["item_id"] for r in conflict_rows if r.get("d3_covered")
+                    }),
+                }
 
     # D3 benign-conflict false-flag rate. Condition on clean-RAG correctness so
     # a false flag is charged only when D3 changes an otherwise-correct answer.
