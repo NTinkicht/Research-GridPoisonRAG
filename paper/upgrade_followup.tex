@@ -1,0 +1,27 @@
+\subsection{Prospective Follow-up and Exploratory Backup}
+After freezing the original Qwen/Mistral/Luna primary results, we locked additional prompt, retriever, and context-composition controls. The Qwen follow-up did not finish because of repeated API failures. We retained the completed Mistral and Luna controls and added Gemini 2.5 Flash-Lite as an exploratory emergency replacement, using its own matched B2 baseline. Gemini was not a pre-specified model family and is excluded from all original confirmatory results.
+
+\begin{table}[t]
+\centering
+\caption{Follow-up controls (percent). Gemini is an exploratory backup; BM25 P@2/CAR denotes exposure/conditional adoption.}
+\label{tab:upgrade-controls}
+\small
+\begin{tabular}{lrrrrr}
+\toprule
+Model & Commit CAR & BM25 P@2/CAR & C1 & C2 & C4 \\
+\midrule
+Mistral Small 3.2 & 49.0 & 1.2/0.0 & 0.0 & 21.2 & 100.0 \\
+GPT-5.6 Luna & 16.3 & 1.2/0.0 & 0.0 & 18.8 & 100.0 \\
+Gemini 2.5 Flash-Lite (expl.) & 42.9 & 1.2/0.0 & 1.2 & 78.8 & 100.0 \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+The dense rerun reproduced 1920 historical generation rows with 0 poison-rank mismatches.
+When the prompt required a numeric commitment, the paired exposed-trial results were Mistral Small 3.2: 49.0\% CAR ($p=4.77\times 10^{-7}$; material prompt mediation supported); GPT-5.6 Luna: 16.3\% CAR ($p=0.0312$; partial prompt mediation); Gemini 2.5 Flash-Lite (expl.): 42.9\% CAR ($p=4.01\times 10^{-5}$; material prompt mediation supported).
+At least one completed follow-up model failed the pre-stated composition thresholds: C1/C2 adoption reached 20\% or C4 did not exceed 50\% adoption. Gemini is exploratory and does not replace Qwen in the locked model family; all three observed C1/C2/C4 rates are shown.
+BM25 is reported as a retriever sensitivity rather than a direct robustness claim because its poison-exposure rate differs from dense retrieval; CAR is therefore interpreted together with Poison@$k$.
+A separate post-hoc benchmark-consequence mapping classified 18 OSHA MAD poisons: 7 fell below the benchmarked inadvertent-movement allowance and 11 consumed part of the electrical-distance component while remaining at or above that allowance. All 7 PRC-024-3 poisons shortened the benchmark no-trip time by 60\%. All 45 fictional Tier-2 poisons exceeded the record limit by 20\%.
+These are benchmark consequence classes, not professional-engineering or physical-safety determinations.
+The post-hoc severity-prioritized D3 what-if did not improve coverage monotonically. Relative to the original hash selection at matched realized coverage, BVR changed by Qwen3-8B -0.625 pp, Mistral Small 3.2 -0.625 pp, GPT-5.6 Luna +0 pp at 40\%, and Qwen3-8B +0.625 pp, Mistral Small 3.2 +1.25 pp, GPT-5.6 Luna +0.625 pp at 70\%. Tier-3 hash coverage was held fixed, so this comparison changes only which poisonable records are covered.
+
