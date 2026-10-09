@@ -16,4 +16,5 @@ jobs:
       - run: python scripts/build_corpus.py
       - run: git diff --exit-code -- corpus/
       - run: python scripts/validate_benchmark.py
+      - run: python -m compileall -q scripts src
       - run: pytest -q
