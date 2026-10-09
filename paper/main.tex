@@ -175,8 +175,9 @@ No power-flow, protection, thermal, or transient simulation is performed, so the
 The study also focuses on scalar factual lookups; procedural switching sequences and open-ended engineering judgment are outside scope.
 
 The public values were source-audited before generation.
-After generation, all 100 items also underwent an LLM-assisted power-systems domain-consistency audit covering source interpretation, synthetic-asset plausibility, and legitimate-conflict logic; no target-value change was identified.
-This automated audit is not professional engineering certification, and the benchmark is not described as engineer-validated.
+The pre-results methods lock had planned external engineer review before full model expansion; generation nevertheless proceeded on the committed source-audited candidate because of the submission schedule.
+After generation, all 100 items underwent an LLM-assisted power-systems domain-consistency audit covering source interpretation, synthetic-asset plausibility, and legitimate-conflict logic; no target-value change was identified.
+This automated audit does not retrospectively satisfy the human-review gate and is not professional engineering certification; the benchmark is not described as engineer-validated.
 Any later human review that changes a target value, applicability condition, allowable interval, or poison construction requires rerunning the affected experiments.
 The forced-exposure result also reflects a deliberately evidence-rich context with three clean same-item supports against one poison, so 0\% attacker-value adoption should not be generalized to weaker or noisier evidence settings.
 
