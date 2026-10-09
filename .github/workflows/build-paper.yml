@@ -41,6 +41,16 @@ jobs:
           working_directory: paper
       - name: Copy named PDF
         run: cp paper/main.pdf paper/GridPoisonRAG_NEECON2026.pdf
+      - name: Package Overleaf project
+        run: |
+          rm -rf overleaf_project GridPoisonRAG_Overleaf_Project.zip
+          mkdir -p overleaf_project
+          cp paper/main.tex overleaf_project/
+          cp paper/references.bib overleaf_project/
+          cp paper/generated_results.tex overleaf_project/
+          cp paper/upgrade_followup.tex overleaf_project/
+          cp paper/GridPoisonRAG_NEECON2026.pdf overleaf_project/
+          (cd overleaf_project && zip -q -r ../GridPoisonRAG_Overleaf_Project.zip .)
       - name: Commit generated paper assets
         run: |
           git config user.name "gridpoisonrag-bot"
@@ -57,3 +67,7 @@ jobs:
         with:
           name: GridPoisonRAG-NEECON2026-PDF
           path: paper/GridPoisonRAG_NEECON2026.pdf
+      - uses: actions/upload-artifact@v4
+        with:
+          name: GridPoisonRAG-Overleaf-Project
+          path: GridPoisonRAG_Overleaf_Project.zip
