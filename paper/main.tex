@@ -151,7 +151,7 @@ No full factorial sweep is performed.
 
 \section{Metrics and Statistical Analysis}
 The raw logs retain labels for correct (\textbf{C}), attacker-value adoption (\textbf{A}), another committed value (\textbf{W}), conflict flag (\textbf{F}), and refusal (\textbf{R}).
-For reported metrics, numeric C/A/W grading is deterministic from the required \texttt{VALUE:} line and item tolerance, while every response without a parsed numeric value is pooled as non-commitment (\textbf{N}); we do not interpret the parser-level F/R split.
+For reported metrics, numeric C/A/W grading is deterministic from the required \texttt{VALUE:} line and item tolerance; all 100 benchmark items use zero numeric tolerance. Every response without a parsed numeric value is pooled as non-commitment (\textbf{N}); we do not interpret the parser-level F/R split.
 
 Let $E_t$ indicate whether a poisoned document occurs in the retrieved top-$k$ context.
 We report Poison@$k$, attack success rate (ASR), conditional adoption rate (CAR), correct-response rate (CRR), non-commitment rate (NCR), and benchmark-violation rate (BVR):
