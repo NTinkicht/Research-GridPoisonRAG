@@ -145,8 +145,10 @@ def write_tex(summary: dict) -> None:
         m = summary["models"][key]
         lines.append(
             f"{label} & {fmt(m['commit']['commit_adoption_pct'])} & "
+            f"{fmt(m['bm25']['UPGRADE_BM25_K2']['poison_at_k_pct'])}/"
             f"{fmt(m['bm25']['UPGRADE_BM25_K2']['car_pct'])} & "
             f"{fmt(m['stage_c']['C1']['adoption_pct'])} & "
+            f"{fmt(m['stage_c']['C2']['adoption_pct'])} & "
             f"{fmt(m['stage_c']['C4']['adoption_pct'])} \\\\"
         )
     lines += [
@@ -271,6 +273,13 @@ def main() -> None:
             "bm25": analyze_bm25(model_dir),
             "stage_c": analyze_stagec(model_dir),
         }
+
+    summary["overall"] = {
+        "strong_composition_hypothesis_falsified": any(
+            not m["stage_c"]["strong_composition_prediction"]["passes_all"]
+            for m in summary["models"].values()
+        )
+    }
 
     out = ROOT / "results" / "upgrade_analysis.json"
     out.write_text(json.dumps(summary, indent=2), encoding="utf-8")
