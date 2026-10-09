@@ -1,3 +1,5 @@
+> **Status - 9 Oct 2026:** This is a historical project-planning artifact. The external engineer-review step below was an internal sequencing/quality-control gate, not a disciplinary requirement for the conference claims. It was not completed before the current submission. The paper therefore makes no engineer-validation or physical-safety claim; public benchmark facts are tied to cited sources and Tier 2 is fictional by declaration. The original planning text is retained below for provenance.
+
 # Power-engineer review gate
 
 The benchmark is deliberately **not** marked engineer-reviewed yet. This is the only external human gate that must not be fabricated or automated.

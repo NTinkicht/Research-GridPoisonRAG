@@ -1,6 +1,6 @@
 # Research-GridPoisonRAG
 
-**Working paper:** *Does the Assistant Check the Record? Knowledge-Base Poisoning and System-of-Record Validation in Utility Operations RAG*
+**Paper:** *Does the Assistant Check the Record? Knowledge-Base Poisoning and System-of-Record Validation in Utility Operations RAG*
 
 GridPoisonRAG studies **answer integrity** in retrieval-augmented assistants used for utility-operations lookups. The threat is a low-trust writer who can add a small number of falsified documents to an indexed repository but cannot alter the authoritative system of record.
 
@@ -60,7 +60,7 @@ D3 is evaluated at imperfect record coverage rather than being treated as an ora
 
 ## Status
 
-The three-model experiment matrix and final statistical analysis are complete. Tier 1 has an authoritative-source audit, and all 100 items now also have an LLM-assisted power-systems domain-consistency audit in [benchmark/LLM_DOMAIN_AUDIT.md](benchmark/LLM_DOMAIN_AUDIT.md) with item-level outcomes in [benchmark/review/llm_domain_review.csv](benchmark/review/llm_domain_review.csv). This automated review is not professional engineering certification; `engineer_reviewed` remains false unless a human engineer explicitly signs off.
+The three-model experiment matrix is complete. The submission-facing analysis reports the pre-specified RQ3 comparison, natural-retrieval correctness/adoption outcomes, exact bounds for zero-event Stage-B cells, and the system-of-record scope assumptions. Tier 1 and Tier 3 public values are source-grounded; Tier 2 is fictional by construction. Historical planning gates remain in the repository for provenance but are not scientific submission requirements.
 
 
 ## Quick start
@@ -85,7 +85,7 @@ The complete execution sequence is in [RUNBOOK.md](RUNBOOK.md).
 
 1. **Public-source audit:** Tier 1 source transcription and interpretation are documented in `benchmark/PUBLIC_SOURCE_AUDIT.md`.
 2. **LLM domain audit:** all 100 items passed the documented automated technical-consistency review without a required target-value change. This does not set `engineer_reviewed=true`.
-3. **Professional review:** a human power-engineer review remains an optional strengthening step for a future benchmark release or journal extension; the current paper does not claim engineer certification.
+3. **Optional external review:** a human power-engineer review may strengthen a future benchmark release or journal extension; it is not required by the current benchmark-level answer-integrity claims.
 4. **Clean-RAG gate:** Tier-2 clean-RAG CRR exceeded the locked 80% interpretation threshold for all three evaluated models.
 5. **Claims:** report benchmark-level answer integrity and out-of-range commitments, never physical grid safety, security, or resilience.
 
@@ -95,5 +95,5 @@ The complete execution sequence is in [RUNBOOK.md](RUNBOOK.md).
 - `corpus/` — 400 clean documents and controlled poison variants.
 - `src/gridpoisonrag/` — retrieval, generation, grading, defenses, metrics and statistics.
 - `scripts/` — validation, freezing, retrieval/generation runs, D3, analysis and adjudication tooling.
-- `paper/` — IEEE manuscript skeleton, related-work positioning, methods lock and adjudication rubric.
+- `paper/` — IEEE manuscript and generated results, related-work positioning, methods lock and adjudication rubric.
 - `.github/workflows/` — CI, retrieval-only Stage A, and manually triggered generation matrix.

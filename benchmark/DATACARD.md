@@ -43,8 +43,8 @@ Do not use the benchmark:
 
 ## Validation status
 
-The machine-readable files pass schema and count validation. Human power-engineer approval is represented only by `engineer_reviewed=true` in benchmark items. At repository initialization all items remain false pending external review.
+The machine-readable files pass schema and count validation. Tier-1 and Tier-3 public values retain source URLs/locators and are source-audited; Tier-2 values are fictional by construction. The `engineer_reviewed` field is reserved strictly for explicit human engineer sign-off and remains false; the current paper does not rely on or claim that status.
 
 ## Reproducibility
 
-The benchmark is frozen with SHA-256 hashes only after human review and before final model runs. The two query phrasings of one item are repeated measures, not independent benchmark samples.
+Git history preserves the benchmark/corpus state used for generation. A pre-generation SHA-256 manifest was planned but not committed; this is documented as provenance rather than retroactively described as preregistration. The two query phrasings of one item are repeated measures, not independent benchmark samples.
