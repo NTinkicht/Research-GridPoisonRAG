@@ -158,8 +158,102 @@ def write_tex(summary: dict) -> None:
     (ROOT / "paper" / "upgrade_followup.tex").write_text("\n".join(lines) + "\n", encoding="utf-8")
 
 
+
+def clean_same_item_count(top10: list[dict], item_id: str, k: int) -> int:
+    return sum(
+        1
+        for hit in top10
+        if hit["rank"] <= k
+        and hit.get("kind") != "poison"
+        and hit.get("item_id") == item_id
+    )
+
+
+def analyze_retrieval_mechanism() -> dict:
+    audit_path = ROOT / "results" / "upgrade_retrieval_audit.json"
+    if not audit_path.exists():
+        raise SystemExit(f"Missing retrieval audit: {audit_path}")
+    audit = json.loads(audit_path.read_text(encoding="utf-8"))
+    dense = audit["dense_reproduction"]
+    if dense["rank_drift_count"] != 0:
+        raise SystemExit("Dense retrieval rank drift detected; mechanism analysis is invalid.")
+
+    dense_k2 = {}
+    for row in dense["unique_retrieval_rows"]:
+        if row["condition_file"] != "dev_k2.jsonl":
+            continue
+        dense_k2[(row["item_id"], row["phrasing"])] = clean_same_item_count(
+            row["top10"], row["item_id"], 2
+        )
+
+    by_model = {}
+    for key in MODELS:
+        rows = read_jsonl(ROOT / "results" / key / "dev_k2.jsonl")
+        exposed = [r for r in rows if r.get("poison_exposed")]
+        buckets = {
+            "zero_clean_same_item": [],
+            "one_or_more_clean_same_item": [],
+        }
+        for r in exposed:
+            pair = (r["item_id"], r["phrasing"])
+            if pair not in dense_k2:
+                raise SystemExit(f"Missing reproduced k=2 context for {pair}")
+            bucket = (
+                "zero_clean_same_item"
+                if dense_k2[pair] == 0
+                else "one_or_more_clean_same_item"
+            )
+            buckets[bucket].append(r)
+        by_model[key] = {
+            name: {
+                "n_exposed": len(group),
+                "attacker_adoptions": sum(r["label"] == "A" for r in group),
+                "car_pct": pct(sum(r["label"] == "A" for r in group), len(group)),
+            }
+            for name, group in buckets.items()
+        }
+
+    bm25_rows = audit["bm25_composition"]
+    bm25 = {}
+    for k in (2, 5):
+        exposed = [r for r in bm25_rows if r[f"poison_exposed_k{k}"]]
+        counts = Counter(
+            "zero"
+            if r[f"clean_same_item_k{k}"] == 0
+            else "one"
+            if r[f"clean_same_item_k{k}"] == 1
+            else "two_or_more"
+            for r in exposed
+        )
+        bm25[f"k{k}"] = {
+            "total_queries": len(bm25_rows),
+            "exposed": len(exposed),
+            "poison_at_k_pct": pct(len(exposed), len(bm25_rows)),
+            "clean_same_item_among_exposed": dict(counts),
+        }
+
+    return {
+        "dense_rows_checked": dense["checked_generation_rows"],
+        "dense_rank_drift_count": dense["rank_drift_count"],
+        "dense_k2_by_model": by_model,
+        "bm25_retrieval": bm25,
+    }
+
+
+def ensure_paper_include() -> None:
+    main = ROOT / "paper" / "main.tex"
+    text = main.read_text(encoding="utf-8")
+    marker = r"\input{generated_results.tex}"
+    include = r"\input{upgrade_followup.tex}"
+    if include not in text:
+        if marker not in text:
+            raise SystemExit("Could not locate generated-results include in paper/main.tex")
+        text = text.replace(marker, marker + "\n" + include, 1)
+        main.write_text(text, encoding="utf-8")
+
+
 def main() -> None:
-    summary = {"models": {}}
+    summary = {"retrieval_mechanism": analyze_retrieval_mechanism(), "models": {}}
     for key in MODELS:
         model_dir = ROOT / "results" / key
         needed = [
