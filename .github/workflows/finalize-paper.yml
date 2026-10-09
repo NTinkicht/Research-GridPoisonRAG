@@ -1,5 +1,5 @@
 name: Finalize NEECON Paper
-# four-review consensus refresh: 2026-10-09 accept-pass-3
+# four-review consensus refresh: 2026-10-09 accept-pass-4
 # acceptance-level analysis refresh: 2026-10-09
 
 on:
@@ -101,7 +101,6 @@ jobs:
             echo "No analysis changes"
           else
             git commit -m "Finalize audited NEECON analysis"
-            git pull --rebase origin main
             git push origin HEAD:main
           fi
       - uses: actions/upload-artifact@v4
