@@ -157,6 +157,7 @@ def write_tex(summary: dict) -> None:
         r"\caption{Follow-up controls (percent). Gemini is an exploratory backup; BM25 P@2/CAR denotes exposure/conditional adoption.}",
         r"\label{tab:upgrade-controls}",
         r"\small",
+        r"\\resizebox{\\columnwidth}{!}{%",
         r"\begin{tabular}{lrrrrr}",
         r"\toprule",
         r"Model & Commit CAR & BM25 P@2/CAR & C1 & C2 & C4 \\",
@@ -174,7 +175,8 @@ def write_tex(summary: dict) -> None:
         )
     lines += [
         r"\bottomrule",
-        r"\end{tabular}",
+        r"\\end{tabular}%",
+        r"}",
         r"\end{table}",
         "",
     ]
