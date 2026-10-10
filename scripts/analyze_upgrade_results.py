@@ -339,29 +339,20 @@ def write_tex(summary: dict) -> None:
     lines = [
         r"\subsection{Prospective Follow-up and Exploratory Additional Model}",
         (
-            "After the original Qwen/Mistral/Luna results were frozen, we locked four follow-up checks "
-            "before running them. Qwen's commit-required and BM25 stages completed, but their runner-local "
-            "outputs were not retained when Stage C failed and the old workflow skipped artifact staging; "
-            "a Qwen-only recovery also failed. No Qwen follow-up output is reported. The completed Mistral "
-            "and Luna runs are the locked follow-ups used here. Gemini 2.5 Flash-Lite was then run as an "
-            "exploratory additional model with its own matched B2 baseline; it was not pre-specified and no "
-            "locked verdict depends on it. The Stage-C falsification rule fires if any locked model crosses "
-            "a threshold, so that verdict does not depend on the unavailable Qwen follow-up."
+            "Four follow-up checks were locked after the original results. Qwen's commit/BM25 stages "
+            "completed but were not retained when Stage C failed before artifact staging; recovery also "
+            "failed, so no Qwen follow-up is reported. Mistral and Luna are the completed locked follow-ups. "
+            "Gemini 2.5 Flash-Lite is exploratory with a matched baseline; no locked verdict depends on it. "
+            "Stage C is falsified if any locked model crosses a threshold, so its verdict is independent of Qwen."
         ),
         "",
         r"\emph{Design.} "
-        "(i) A retrieval audit reran the frozen dense retriever and logged the top-10 documents. "
-        "(ii) A commit-required prompt removed permission to abstain and required one best numeric VALUE. "
-        "It reused the one-poison $k=5$ setting; CAR is evaluated on the same 49 exposed Tier~1 trials "
-        "per locked model. Confidence intervals resample item IDs, and paired inference collapses repeated "
-        "phrasings to the item, positive if any originally exposed phrasing adopts. "
-        "(iii) BM25 (BM25Okapi, lower-cased whitespace tokens, corpus-order ties) replaced the dense "
-        "retriever at $k=2$ and $k=5$. "
-        "(iv) Stage~C used the formal query for each of the 80 poisonable items with fixed contexts: "
-        "C0, two clean same-item supports; C1, poison plus its paired clean twin; C2, poison plus a "
-        "different clean same-item support; C3, poison plus an off-item distractor; and C4, poison alone. "
-        "The locked rule treated the strong composition hypothesis as falsified if any locked model "
-        "reached at least 20\\% adoption in C1 or C2, or at most 50\\% in C4.",
+        "The frozen dense retriever was audited at top-10. A commit-required prompt reused one-poison "
+        "$k=5$; CAR uses the same 49 exposed Tier~1 trials, item-cluster intervals, and item-level paired "
+        "inference. BM25 used lower-cased whitespace tokens and corpus-order ties at $k=2,5$. Stage~C used "
+        "one formal query per item: C0, two clean supports; C1, poison+paired twin; C2, poison+different "
+        "clean support; C3, poison+distractor; C4, poison alone. The strong composition hypothesis was "
+        "falsified if any locked model reached $\\geq20\\%$ adoption in C1/C2 or $\\leq50\\%$ in C4.",
         "",
     ]
 
@@ -401,9 +392,8 @@ def write_tex(summary: dict) -> None:
         f"while Luna has no positive discordant item ($p={latex_p(lci['both_item_paired_exact_p'])}$). "
         f"Luna produced {lci['commit_exposed_empty']} empty outputs among these {lci['n_pairs']} exposed "
         f"trials; excluding only those empties gives {fmt(lci['commit_adoption_nonempty_pct'])}\\% adoption. "
-        f"The commit-prompt clean controls, pooled across both tiers, retained {fmt(mci['commit_clean_crr_pct'])}\\% CRR for Mistral "
-        f"and {fmt(lci['commit_clean_crr_pct'])}\\% for Luna "
-        f"(exploratory Gemini: {fmt(gci['commit_clean_crr_pct'])}\\%). "
+        f"Pooled clean-control CRR was {fmt(mci['commit_clean_crr_pct'])}\\% (Mistral), "
+        f"{fmt(lci['commit_clean_crr_pct'])}\\% (Luna), and {fmt(gci['commit_clean_crr_pct'])}\\% (Gemini, exploratory). "
         "For the locked models the comparator is the historical B2 run under unpinned provider routing; "
         "Gemini used a contemporaneous matched baseline."
     )
@@ -433,12 +423,10 @@ def write_tex(summary: dict) -> None:
     qe = empty["qwen_qwen3-8b"]
     le = empty["openai_gpt-5.6-luna"]
     lines.append(
-        "An empty-output audit found none in Mistral or Qwen B2\\_P1 or either Stage-B position. "
-        f"Luna had {le['B2_P1']['empty']}/{le['B2_P1']['n']} empties in B2\\_P1, "
-        f"{le['STAGE_B_FIRST']['empty']}/{le['STAGE_B_FIRST']['n']} with poison first and "
-        f"{le['STAGE_B_LAST']['empty']}/{le['STAGE_B_LAST']['n']} with poison last. "
-        f"In Luna Stage C, C2 and C3 each had {le['STAGE_C']['C2']['empty']}/80 empties and "
-        "C0/C1/C4 had none; Mistral had none. Qwen Stage C is unavailable because its follow-up failed."
+        "Empty-output audit: Mistral and Qwen had none in B2\\_P1/Stage B; Luna had "
+        f"{le['B2_P1']['empty']}/{le['B2_P1']['n']} in B2\\_P1, "
+        f"{le['STAGE_B_FIRST']['empty']}/{le['STAGE_B_FIRST']['n']} poison-first, none poison-last, "
+        f"and {le['STAGE_C']['C2']['empty']}/80 in each of C2/C3 (none in C0/C1/C4)."
     )
 
     ml = summary["model_layer"]
@@ -446,14 +434,12 @@ def write_tex(summary: dict) -> None:
     qp = ml["qwen_qwen3-8b"]
     lp = ml["openai_gpt-5.6-luna"]
     lines.append(
-        "Provider metadata show that original B2 requests were served by "
-        f"{'/'.join(mp['base_providers'])} for Mistral, {'/'.join(qp['base_providers'])} for Qwen, "
-        f"and {'/'.join(lp['base_providers'])} for Luna; the completed commit follow-up used "
-        f"{'/'.join(mp['commit_providers'])} for Mistral and {'/'.join(lp['commit_providers'])} for Luna. "
-        f"Closed-book Tier~1 CRR was {mp['b0_by_tier']['1']['correct']}/{mp['b0_by_tier']['1']['n']} "
-        f"for Mistral, {qp['b0_by_tier']['1']['correct']}/{qp['b0_by_tier']['1']['n']} for Qwen, and "
-        f"{lp['b0_by_tier']['1']['correct']}/{lp['b0_by_tier']['1']['n']} for Luna; Luna had "
-        f"{lp['b0_by_tier']['1']['empty']}/{lp['b0_by_tier']['1']['n']} empty visible outputs."
+        f"B2 providers were {'/'.join(mp['base_providers'])} (Mistral), "
+        f"{'/'.join(qp['base_providers'])} (Qwen), and {'/'.join(lp['base_providers'])} (Luna); "
+        f"commit providers were {'/'.join(mp['commit_providers'])} and {'/'.join(lp['commit_providers'])}. "
+        f"Closed-book Tier~1 correct counts were {mp['b0_by_tier']['1']['correct']}/70, "
+        f"{qp['b0_by_tier']['1']['correct']}/70, and {lp['b0_by_tier']['1']['correct']}/70; Luna had "
+        f"{lp['b0_by_tier']['1']['empty']}/70 empties."
     )
 
     mc2 = mistral["stage_c"]["C2"]
@@ -467,14 +453,7 @@ def write_tex(summary: dict) -> None:
         "Both locked models adopted in 0/80 C1 and 80/80 C4 trials. In C1 the paired twin protected "
         "integrity by producing non-commitment rather than correct answers: both locked models were "
         "0/80 correct. The no-poison C0 control was 0/80 adoption and 80/80 correct for every model. "
-        "For Mistral, C2/C3/C4 outcomes were "
-        f"{mistral['stage_c']['C2']['adoption_count']}A/{mistral['stage_c']['C2']['correct_count']}C/{mistral['stage_c']['C2']['noncommit_count']}N, "
-        f"{mistral['stage_c']['C3']['adoption_count']}A/{mistral['stage_c']['C3']['correct_count']}C/{mistral['stage_c']['C3']['noncommit_count']}N, and "
-        f"{mistral['stage_c']['C4']['adoption_count']}A/{mistral['stage_c']['C4']['correct_count']}C/{mistral['stage_c']['C4']['noncommit_count']}N; "
-        "for Luna they were "
-        f"{luna['stage_c']['C2']['adoption_count']}A/{luna['stage_c']['C2']['correct_count']}C/{luna['stage_c']['C2']['noncommit_count']}N, "
-        f"{luna['stage_c']['C3']['adoption_count']}A/{luna['stage_c']['C3']['correct_count']}C/{luna['stage_c']['C3']['noncommit_count']}N, and "
-        f"{luna['stage_c']['C4']['adoption_count']}A/{luna['stage_c']['C4']['correct_count']}C/{luna['stage_c']['C4']['noncommit_count']}N. "
+        "C2/C3/C4 correct counts were 0/80 for both locked models; "
         "Table~\\ref{tab:upgrade-controls} reports adoption counts."
     )
 
