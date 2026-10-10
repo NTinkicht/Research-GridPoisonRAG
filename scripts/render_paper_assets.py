@@ -208,6 +208,8 @@ def main():
     clean_correct_on_later_exposed = []
     k2_unexposed_correct = []
     k2_unexposed_n = []
+    k2_exposed_items = []
+    k2_adopt_items = []
     for m in models:
         model_dir = ROOT / "results" / m.replace("/", "_")
         b1_rows = read_jsonl(model_dir / "gate_b1.jsonl")
@@ -224,9 +226,12 @@ def main():
         clean_correct_on_later_exposed.append(sum(r["label"] == "C" for r in matched_clean))
 
         k2_rows = read_jsonl(model_dir / "dev_k2.jsonl")
+        exposed_k2 = [r for r in k2_rows if r["tier"] == 1 and r.get("poison_exposed")]
         unexposed = [r for r in k2_rows if r["tier"] == 1 and not r.get("poison_exposed")]
         k2_unexposed_correct.append(sum(r["label"] == "C" for r in unexposed))
         k2_unexposed_n.append(len(unexposed))
+        k2_exposed_items.append(len({r["item_id"] for r in exposed_k2}))
+        k2_adopt_items.append(len({r["item_id"] for r in exposed_k2 if r["label"] == "A"}))
 
     lines.append(
         "Adding two poison paraphrases left Tier~1 exposure unchanged at 70.0\\% but raised Tier~2 "
@@ -243,10 +248,15 @@ def main():
         "In the pre-specified secondary $k=2$ condition, all three models adopted the attacker value in "
         f"{k2_same}{count_range(k2_attacker)} of {count_range(k2_exposed)} exposed Tier~1 trials "
         f"(CAR {100*k2_k/k2_n:.1f}\\%; item-cluster 95\\% CI "
-        f"{100*k2_lo:.1f}--{100*k2_hi:.1f}). "
+        f"{100*k2_lo:.1f}--{100*k2_hi:.1f}); these exposures span "
+        f"{count_range(k2_exposed_items)} items and adoptions span {count_range(k2_adopt_items)} items. "
         f"No clean $k=2$ generation arm was run; among the {count_range(k2_unexposed_n)} unexposed "
         f"Tier~1 trials, each model was correct on {count_range(k2_unexposed_correct)}, so the $k=2$ "
         "CRR row is not a clean-$k=5$ comparison."
+    )
+    lines.append(
+        "Sparse Tier~2 CAR cells in Table~\\ref{tab:natural} correspond to 0/3, 3--4/69, "
+        "0--1/7, and 0/3 exposed trials for one poison, three poisons, bulletin, and $k=2$, respectively."
     )
     if analysis["wrong_in_range"][models[0]].get("by_tier"):
         t1_adopted = [analysis["wrong_in_range"][m]["by_tier"]["T1"]["n_adopted_exposed"] for m in models]
@@ -270,8 +280,10 @@ def main():
     upper_t1 = analysis["primary_rq2_stage_b"][f"{models[0]}|STAGE_B_FIRST|T1"]["exact_hi95"]
     upper_t2 = analysis["primary_rq2_stage_b"][f"{models[0]}|STAGE_B_FIRST|T2"]["exact_hi95"]
     lines.append(
-        "In the evidence-rich fixed context (three clean same-item supports, one distractor, one poison), "
-        "attacker-value adoption and BVR were 0\\% in every model/tier/position cell. "
+        "In the evidence-rich fixed context (all three clean same-item supports, including the poison's "
+        "paired twin, one distractor, and one poison), attacker-value adoption and BVR were 0\\% in every "
+        "model/tier/position cell. This floor is therefore specific to an evidence-rich minimal-pair context "
+        "and does not establish general resistance to poisoning. "
         f"With zero events, the exact 95\\% upper bounds on per-item adoption are {100*upper_t1:.1f}\\% "
         f"for Tier~1 ($n=35$) and {100*upper_t2:.1f}\\% for Tier~2 ($n=45$). "
         "Table~\\ref{tab:rq2} reports correct-answer retention."
@@ -429,11 +441,14 @@ def main():
     lines.append("\\end{tabular}")
     lines.append("\\end{table}")
     lines.append(
+        "Table~\\ref{tab:bffr} makes the record-scope construction explicit. With 13/20 Tier~3 items "
+        "assigned a generic record, the full-coverage false-flag ceiling is set largely by design. "
         "At 70\\% coverage, conditional BFFR was "
         f"{range_pct([analysis['bffr'][f'{m}|D3_CONFLICT_70']['rate'] for m in models])}; "
         "at full coverage it was "
         f"{range_pct([analysis['bffr'][f'{m}|D3_CONFLICT_100']['rate'] for m in models])}. "
-        "The cost is therefore driven by record scope, not only by model behavior."
+        "The empirical model-dependent part is that clean RAG answered 35--39/40 scoped conflicts correctly; "
+        "the false-flag magnitude is otherwise largely a consequence of the controlled record mismatch."
     )
 
     out = ROOT / args.out

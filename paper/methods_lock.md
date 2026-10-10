@@ -12,6 +12,8 @@ This dated addendum preserves the original lock below and records execution/repo
 - BFFR was subsequently conditioned on clean-RAG correctness in commit 455fba8; this narrows the metric to flags on otherwise-correct benign-conflict answers.
 - The planned SHA-256 freeze manifest was not committed. Benchmark, corpus, prompts, grader, and experiment configuration were fixed in Git history before generation; commit 3de75c6 records the final pre-generation experiment alignment.
 - The exploratory temperature-0.7 sensitivity runs were not performed.
+- For zero-event Stage-B cells, the submission reports exact Clopper--Pearson upper bounds instead of the locked cluster bootstrap because the bootstrap interval is degenerate at zero events. This is a reporting-method deviation, not a new endpoint.
+- The paper renames the locked "SVR" violation metric to benchmark-violation rate (BVR) to avoid safety language; the underlying committed-value interval test is unchanged.
 
 
 ## Final-upgrade pre-run addendum (9 Oct 2026)

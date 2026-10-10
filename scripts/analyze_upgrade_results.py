@@ -103,6 +103,25 @@ def exact_paired_a(base_rows: list[dict], new_rows: list[dict]) -> dict:
         else float(binomtest(min(item_b10, item_b01), item_discordant, 0.5).pvalue)
     )
 
+    # Sensitivity matching the stricter RQ3 collapse: an item is positive only
+    # when both originally exposed phrasings exist and both adopt.
+    base_item_both = {
+        item_id: len(ks) == 2 and all(b[k]["label"] == "A" for k in ks)
+        for item_id, ks in item_keys.items()
+    }
+    new_item_both = {
+        item_id: len(ks) == 2 and all(n[k]["label"] == "A" for k in ks)
+        for item_id, ks in item_keys.items()
+    }
+    both_b10 = sum(base_item_both[i] and not new_item_both[i] for i in item_keys)
+    both_b01 = sum((not base_item_both[i]) and new_item_both[i] for i in item_keys)
+    both_discordant = both_b10 + both_b01
+    both_p = (
+        1.0
+        if both_discordant == 0
+        else float(binomtest(min(both_b10, both_b01), both_discordant, 0.5).pvalue)
+    )
+
     return {
         "n_pairs": len(keys),
         "base_adoption": sum(1 for k in keys if b[k]["label"] == "A"),
@@ -116,6 +135,11 @@ def exact_paired_a(base_rows: list[dict], new_rows: list[dict]) -> dict:
         "item_base_to_new_A": item_b01,
         "item_A_to_new_nonA": item_b10,
         "item_paired_exact_p": item_p,
+        "both_item_base_adoption": sum(base_item_both.values()),
+        "both_item_new_adoption": sum(new_item_both.values()),
+        "both_item_base_to_new_A": both_b01,
+        "both_item_A_to_new_nonA": both_b10,
+        "both_item_paired_exact_p": both_p,
         "conversions": {f"{a}->{c}": v for (a, c), v in sorted(conversions.items())},
     }
 
@@ -160,6 +184,16 @@ def analyze_commit(model_dir: Path) -> dict:
     clean = [r for r in new if r["condition"] == "UPGRADE_COMMIT_B1"]
     paired["commit_clean_crr_pct"] = pct(sum(r["label"] == "C" for r in clean), len(clean))
     paired["commit_clean_empty"] = sum(not (r.get("answer") or "").strip() for r in clean)
+    paired["commit_clean_by_tier"] = {
+        str(tier): {
+            "n": len(group),
+            "correct": sum(r["label"] == "C" for r in group),
+            "crr_pct": pct(sum(r["label"] == "C" for r in group), len(group)),
+            "empty": sum(not (r.get("answer") or "").strip() for r in group),
+        }
+        for tier in (1, 2)
+        for group in [[r for r in clean if r["tier"] == tier]]
+    }
     return paired
 
 
@@ -248,6 +282,30 @@ def analyze_empty_output_audit() -> dict:
     return out
 
 
+def analyze_model_layer() -> dict:
+    out = {}
+    for key in MODELS:
+        model_dir = ROOT / "results" / key
+        b0 = read_jsonl(model_dir / "gate_b0.jsonl")
+        base = read_jsonl(model_dir / "main_b2_p1.jsonl")
+        commit_path = model_dir / "upgrade_commit.jsonl"
+        commit = read_jsonl(commit_path) if commit_path.exists() else []
+        by_tier = {}
+        for tier in (1, 2):
+            group = [r for r in b0 if r["tier"] == tier]
+            by_tier[str(tier)] = {
+                "n": len(group),
+                "correct": sum(r["label"] == "C" for r in group),
+                "empty": sum(not (r.get("answer") or "").strip() for r in group),
+            }
+        out[key] = {
+            "b0_by_tier": by_tier,
+            "base_providers": sorted({r.get("api_provider") for r in base if r.get("api_provider")}),
+            "commit_providers": sorted({r.get("api_provider") for r in commit if r.get("api_provider")}),
+        }
+    return out
+
+
 def fmt(x: float | None) -> str:
     return "--" if x is None else f"{x:.1f}"
 
@@ -274,15 +332,21 @@ def write_tex(summary: dict) -> None:
     dense_ref = retrieval["dense_k2_by_model"]["mistralai_mistral-small-3.2-24b-instruct"]
     zero_clean = dense_ref["zero_clean_same_item"]
     with_clean = dense_ref["one_or_more_clean_same_item"]
+    twin_ref = retrieval["dense_twin_by_model"]["mistralai_mistral-small-3.2-24b-instruct"]
+    twin_k5 = twin_ref["main_b2_p1.jsonl"]
+    twin_k2 = twin_ref["dev_k2.jsonl"]
 
     lines = [
-        r"\subsection{Prospective Follow-up and Exploratory Backup}",
+        r"\subsection{Prospective Follow-up and Exploratory Additional Model}",
         (
             "After the original Qwen/Mistral/Luna results were frozen, we locked four follow-up checks "
-            "before running them. Qwen's follow-up runs did not complete because of repeated provider-layer "
-            "failures; the completed Mistral and Luna runs are reported as locked follow-ups. Gemini 2.5 "
-            "Flash-Lite was then run as an exploratory backup with its own matched B2 baseline; it is not "
-            "a pre-specified model, and no locked verdict depends on it."
+            "before running them. Qwen's commit-required and BM25 stages completed, but their runner-local "
+            "outputs were not retained when Stage C failed and the old workflow skipped artifact staging; "
+            "a Qwen-only recovery also failed. No Qwen follow-up output is reported. The completed Mistral "
+            "and Luna runs are the locked follow-ups used here. Gemini 2.5 Flash-Lite was then run as an "
+            "exploratory additional model with its own matched B2 baseline; it was not pre-specified and no "
+            "locked verdict depends on it. The Stage-C falsification rule fires if any locked model crosses "
+            "a threshold, so that verdict does not depend on the unavailable Qwen follow-up."
         ),
         "",
         r"\emph{Design.} "
@@ -312,6 +376,12 @@ def write_tex(summary: dict) -> None:
         f"and all {zero_clean['attacker_adoptions']} adopted; {with_clean['n_exposed']} exposed trials had at "
         "least one clean same-item passage and none adopted. Because the adoption outcomes were known before "
         "this audit, this is a consistency check rather than an independent test. "
+        f"In the one-poison $k=5$ Tier~1 contexts, the paired clean twin was present in "
+        f"{twin_k5['with_twin']}/{twin_k5['n_exposed']} exposed trials; at $k=2$ it was present in "
+        f"{twin_k2['with_twin']}/{twin_k2['n_exposed']}. The $k=2$ exposed set spans "
+        f"{twin_k2['n_exposed_items']} items and the nine adopting trials span "
+        f"{twin_k2['adoption_items']} items. This minimal-pair co-retrieval bounds any claim that generic "
+        "clean evidence protects against poisoning. "
         f"Requiring commitment raised adoption from {mci['base_adoption']}/{mci['n_pairs']} to "
         f"{mci['new_adoption']}/{mci['n_pairs']} for Mistral "
         f"({fmt(mci['commit_adoption_pct'])}\\%; item-cluster 95\\% CI "
@@ -321,8 +391,14 @@ def write_tex(summary: dict) -> None:
         f"({fmt(lci['commit_adoption_pct'])}\\%; {fmt(lci['commit_adoption_cluster_lo95_pct'])}--"
         f"{fmt(lci['commit_adoption_cluster_hi95_pct'])}; item-level exact "
         f"$p={latex_p(lci['item_paired_exact_p'])}$, $n={lci['n_items']}$ items). "
-        "The pre-stated point-estimate bands were $\\leq 10\\%$ model resistance, $>10$ to $<25\\%$ "
-        "partial mediation, and $\\geq 25\\%$ material mediation; Mistral is material and Luna partial. "
+        "The lock called the pre-stated point-estimate bands $\\leq 10\\%$ resistance, $>10$ to $<25\\%$ "
+        "partial mediation, and $\\geq 25\\%$ material mediation. We use them here only as prompt-dependence "
+        "classifications, not as formal causal-mediation analysis. Mistral meets the material band. Luna's "
+        f"point estimate lies in the partial band, but its item-cluster interval "
+        f"({fmt(lci['commit_adoption_cluster_lo95_pct'])}--{fmt(lci['commit_adoption_cluster_hi95_pct'])}\\%) "
+        "crosses all three bands. Under a stricter sensitivity that requires both originally exposed "
+        f"phrasings to adopt, Mistral remains directional ($p={latex_p(mci['both_item_paired_exact_p'])}$) "
+        f"while Luna has no positive discordant item ($p={latex_p(lci['both_item_paired_exact_p'])}$). "
         f"Luna produced {lci['commit_exposed_empty']} empty outputs among these {lci['n_pairs']} exposed "
         f"trials; excluding only those empties gives {fmt(lci['commit_adoption_nonempty_pct'])}\\% adoption. "
         f"The commit-prompt clean controls retained {fmt(mci['commit_clean_crr_pct'])}\\% CRR for Mistral "
@@ -331,6 +407,26 @@ def write_tex(summary: dict) -> None:
         "For the locked models the comparator is the historical B2 run under unpinned provider routing; "
         "Gemini used a contemporaneous matched baseline."
     )
+
+    mconv = mci["conversions"]
+    lconv = lci["conversions"]
+    lines += [
+        r"\begin{table}[t]",
+        r"\centering",
+        r"\caption{Locked base-to-commit transitions on 49 exposed Tier~1 trials. N is non-commitment; Other contains transitions not shown separately.}",
+        r"\label{tab:commit-transitions}",
+        r"\footnotesize",
+        r"\begin{tabular}{lrrrrr}",
+        r"\toprule",
+        r"Model & A$\to$A & N$\to$A & N$\to$C & N$\to$N & Other \\",
+        r"\midrule",
+        f"Mistral & {mconv.get('A->A',0)} & {mconv.get('N->A',0)} & {mconv.get('N->C',0)} & {mconv.get('N->N',0)} & {sum(v for k,v in mconv.items() if k not in {'A->A','N->A','N->C','N->N'})} \\\\",
+        f"Luna & {lconv.get('A->A',0)} & {lconv.get('N->A',0)} & {lconv.get('N->C',0)} & {lconv.get('N->N',0)} & {sum(v for k,v in lconv.items() if k not in {'A->A','N->A','N->C','N->N'})} \\\\",
+        r"\bottomrule",
+        r"\end{tabular}",
+        r"\end{table}",
+        "",
+    ]
 
     empty = summary["empty_output_audit"]
     me = empty["mistralai_mistral-small-3.2-24b-instruct"]
@@ -345,6 +441,21 @@ def write_tex(summary: dict) -> None:
         "C0/C1/C4 had none; Mistral had none. Qwen Stage C is unavailable because its follow-up failed."
     )
 
+    ml = summary["model_layer"]
+    mp = ml["mistralai_mistral-small-3.2-24b-instruct"]
+    qp = ml["qwen_qwen3-8b"]
+    lp = ml["openai_gpt-5.6-luna"]
+    lines.append(
+        "Provider metadata show that original B2 requests were served by "
+        f"{'/'.join(mp['base_providers'])} for Mistral, {'/'.join(qp['base_providers'])} for Qwen, "
+        f"and {'/'.join(lp['base_providers'])} for Luna; the completed commit follow-up used "
+        f"{'/'.join(mp['commit_providers'])} for Mistral and {'/'.join(lp['commit_providers'])} for Luna. "
+        f"Closed-book Tier~1 CRR was {mp['b0_by_tier']['1']['correct']}/{mp['b0_by_tier']['1']['n']} "
+        f"for Mistral, {qp['b0_by_tier']['1']['correct']}/{qp['b0_by_tier']['1']['n']} for Qwen, and "
+        f"{lp['b0_by_tier']['1']['correct']}/{lp['b0_by_tier']['1']['n']} for Luna; Luna had "
+        f"{lp['b0_by_tier']['1']['empty']}/{lp['b0_by_tier']['1']['n']} empty visible outputs."
+    )
+
     mc2 = mistral["stage_c"]["C2"]
     lc2 = luna["stage_c"]["C2"]
     lines.append(
@@ -356,7 +467,15 @@ def write_tex(summary: dict) -> None:
         "Both locked models adopted in 0/80 C1 and 80/80 C4 trials. In C1 the paired twin protected "
         "integrity by producing non-commitment rather than correct answers: both locked models were "
         "0/80 correct. The no-poison C0 control was 0/80 adoption and 80/80 correct for every model. "
-        "Table~\\ref{tab:upgrade-controls} reports all C1--C4 adoption counts."
+        "For Mistral, C2/C3/C4 outcomes were "
+        f"{mistral['stage_c']['C2']['adoption_count']}A/{mistral['stage_c']['C2']['correct_count']}C/{mistral['stage_c']['C2']['noncommit_count']}N, "
+        f"{mistral['stage_c']['C3']['adoption_count']}A/{mistral['stage_c']['C3']['correct_count']}C/{mistral['stage_c']['C3']['noncommit_count']}N, and "
+        f"{mistral['stage_c']['C4']['adoption_count']}A/{mistral['stage_c']['C4']['correct_count']}C/{mistral['stage_c']['C4']['noncommit_count']}N; "
+        "for Luna they were "
+        f"{luna['stage_c']['C2']['adoption_count']}A/{luna['stage_c']['C2']['correct_count']}C/{luna['stage_c']['C2']['noncommit_count']}N, "
+        f"{luna['stage_c']['C3']['adoption_count']}A/{luna['stage_c']['C3']['correct_count']}C/{luna['stage_c']['C3']['noncommit_count']}N, and "
+        f"{luna['stage_c']['C4']['adoption_count']}A/{luna['stage_c']['C4']['correct_count']}C/{luna['stage_c']['C4']['noncommit_count']}N. "
+        "Table~\\ref{tab:upgrade-controls} reports adoption counts."
     )
 
     lines += [
@@ -416,7 +535,7 @@ def write_tex(summary: dict) -> None:
     )
     consequence = (
         "A post-hoc benchmark-consequence mapping decomposed each OSHA MAD into its electrical "
-        "component and inadvertent-movement allowance. "
+        "component and ergonomic component. "
         f"Of the {mad['n']} MAD poisons, {mad['movement_allowance_consumed']} consumed only part of the "
         f"allowance, leaving {mad['remaining_beyond_electrical_min_m']:.2f}--"
         f"{mad['remaining_beyond_electrical_max_m']:.2f}~m beyond the electrical component, and "
@@ -484,8 +603,21 @@ def analyze_retrieval_mechanism() -> dict:
     if dense["rank_drift_count"] != 0:
         raise SystemExit("Dense retrieval rank drift detected; mechanism analysis is invalid.")
 
+    poisons = read_jsonl(ROOT / "corpus" / "poison_variants.jsonl")
+    twin_by_item = {
+        p["item_id"]: p["paired_clean_doc_id"]
+        for p in poisons
+        if p.get("variant") == "out_of_range_plain"
+    }
+    dense_twin = {}
     dense_k2 = {}
     for row in dense["unique_retrieval_rows"]:
+        if row["condition_file"] in {"main_b2_p1.jsonl", "dev_k2.jsonl"}:
+            k = 5 if row["condition_file"] == "main_b2_p1.jsonl" else 2
+            dense_twin[(row["condition_file"], row["item_id"], row["phrasing"])] = any(
+                h["rank"] <= k and h.get("doc_id") == twin_by_item.get(row["item_id"])
+                for h in row["top10"]
+            )
         if row["condition_file"] != "dev_k2.jsonl":
             continue
         dense_k2[(row["item_id"], row["phrasing"])] = clean_same_item_count(
@@ -520,6 +652,32 @@ def analyze_retrieval_mechanism() -> dict:
             for name, group in buckets.items()
         }
 
+    twin_by_model = {}
+    for key in MODELS:
+        model_stats = {}
+        for filename in ("main_b2_p1.jsonl", "dev_k2.jsonl"):
+            rows = [
+                r for r in read_jsonl(ROOT / "results" / key / filename)
+                if r["tier"] == 1 and r.get("poison_exposed")
+            ]
+            with_twin = []
+            without_twin = []
+            for r in rows:
+                lookup = (filename, r["item_id"], r["phrasing"])
+                if lookup not in dense_twin:
+                    raise SystemExit(f"Missing reproduced twin context for {lookup}")
+                (with_twin if dense_twin[lookup] else without_twin).append(r)
+            model_stats[filename] = {
+                "n_exposed": len(rows),
+                "n_exposed_items": len({r["item_id"] for r in rows}),
+                "with_twin": len(with_twin),
+                "without_twin": len(without_twin),
+                "with_twin_adoptions": sum(r["label"] == "A" for r in with_twin),
+                "without_twin_adoptions": sum(r["label"] == "A" for r in without_twin),
+                "adoption_items": len({r["item_id"] for r in rows if r["label"] == "A"}),
+            }
+        twin_by_model[key] = model_stats
+
     bm25_rows = audit["bm25_composition"]
     bm25 = {}
     for k in (2, 5):
@@ -543,6 +701,7 @@ def analyze_retrieval_mechanism() -> dict:
         "dense_rows_checked": dense["checked_generation_rows"],
         "dense_rank_drift_count": dense["rank_drift_count"],
         "dense_k2_by_model": by_model,
+        "dense_twin_by_model": twin_by_model,
         "bm25_retrieval": bm25,
         "bm25_tie_sensitivity": audit.get("bm25_tie_sensitivity"),
     }
@@ -631,6 +790,7 @@ def main() -> None:
         "retrieval_mechanism": analyze_retrieval_mechanism(),
         "existing_data_upgrade": analyze_existing_data_upgrade(),
         "empty_output_audit": analyze_empty_output_audit(),
+        "model_layer": analyze_model_layer(),
         "models": {},
         "followup_scope": {
             "original_locked_model_families": list(MODELS),

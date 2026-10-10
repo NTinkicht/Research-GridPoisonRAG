@@ -10,6 +10,9 @@ on:
       - "results/upgrade_analysis.json"
       - "results/stage_a_summary.json"
       - "scripts/render_paper_assets.py"
+      - "scripts/analyze_upgrade_results.py"
+      - "results/upgrade_retrieval_audit.json"
+      - "results/existing_data_upgrade.json"
       - ".github/workflows/build-paper.yml"
   workflow_dispatch:
 
@@ -34,6 +37,9 @@ jobs:
         run: |
           if [ -f results/analysis_summary.json ]; then
             python scripts/render_paper_assets.py
+          fi
+          if [ -f results/upgrade_retrieval_audit.json ]; then
+            python scripts/analyze_upgrade_results.py
           fi
       - uses: xu-cheng/latex-action@v3
         with:
@@ -65,7 +71,7 @@ jobs:
         run: |
           git config user.name "gridpoisonrag-bot"
           git config user.email "actions@users.noreply.github.com"
-          git add paper/generated_results.tex paper/GridPoisonRAG_NEECON2026.pdf
+          git add paper/generated_results.tex paper/upgrade_followup.tex results/upgrade_analysis.json paper/GridPoisonRAG_NEECON2026.pdf
           if git diff --cached --quiet; then
             echo "No generated changes"
           else
