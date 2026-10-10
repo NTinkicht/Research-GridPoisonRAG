@@ -423,7 +423,7 @@ def main():
         "(a post-hoc refinement; unconditional BFFR at full coverage was 62.5\\% for every model)."
     )
     lines.append("\\begin{table}[t]")
-    lines.append("\\caption{Conditional benign-conflict false-flag rate (BFFR).}")
+    lines.append("\\caption{Conditional BFFR at nominal coverage; realized Tier~3 coverage is 6/20, 14/20, and 20/20.}")
     lines.append("\\label{tab:bffr}")
     lines.append("\\centering")
     lines.append("\\small")
@@ -441,7 +441,7 @@ def main():
     lines.append("\\end{tabular}")
     lines.append("\\end{table}")
     lines.append(
-        "Table~\\ref{tab:bffr} makes the record-scope construction explicit. With 13/20 Tier~3 items "
+        "Table~\\ref{tab:bffr} reports the resulting rates. With 13/20 Tier~3 items "
         "assigned a generic record, the full-coverage false-flag ceiling is set largely by design. "
         "At 70\\% coverage, conditional BFFR was "
         f"{range_pct([analysis['bffr'][f'{m}|D3_CONFLICT_70']['rate'] for m in models])}; "

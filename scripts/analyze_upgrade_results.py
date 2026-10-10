@@ -349,7 +349,8 @@ def write_tex(summary: dict) -> None:
         r"\emph{Design.} "
         "The frozen dense retriever was audited at top-10. A commit-required prompt reused one-poison "
         "$k=5$; CAR uses the same 49 exposed Tier~1 trials, item-cluster intervals, and item-level paired "
-        "inference. BM25 used lower-cased whitespace tokens and corpus-order ties at $k=2,5$. Stage~C used "
+        "inference (primary: positive if any exposed phrasing adopts; stricter sensitivity: both phrasings "
+        "must be exposed and both adopt, so one-exposed-phrasing items count negative). BM25 used lower-cased whitespace tokens and corpus-order ties at $k=2,5$. Stage~C used "
         "one formal query per item: C0, two clean supports; C1, poison+paired twin; C2, poison+different "
         "clean support; C3, poison+distractor; C4, poison alone. The strong composition hypothesis was "
         "falsified if any locked model reached $\\geq20\\%$ adoption in C1/C2 or $\\leq50\\%$ in C4.",
@@ -368,11 +369,12 @@ def write_tex(summary: dict) -> None:
         "least one clean same-item passage and none adopted. Because the adoption outcomes were known before "
         "this audit, this is a consistency check rather than an independent test. "
         f"In the one-poison $k=5$ Tier~1 contexts, the paired clean twin was present in "
-        f"{twin_k5['with_twin']}/{twin_k5['n_exposed']} exposed trials; at $k=2$ it was present in "
-        f"{twin_k2['with_twin']}/{twin_k2['n_exposed']}. The $k=2$ exposed set spans "
-        f"{twin_k2['n_exposed_items']} items and the nine adopting trials span "
-        f"{twin_k2['adoption_items']} items. This minimal-pair co-retrieval bounds any claim that generic "
-        "clean evidence protects against poisoning. "
+        f"{twin_k5['with_twin']}/{twin_k5['n_exposed']} exposed trials; none adopted, while both "
+        f"{twin_k5['without_twin']} twin-absent trials adopted in every original model. At $k=2$, all "
+        f"{twin_k2['with_twin']} Tier~1 exposed contexts containing clean same-item evidence contained the "
+        f"paired twin and none adopted; all {twin_k2['without_twin']} twin-absent exposures adopted. "
+        "Because outcomes were already known, this remains a consistency check. This minimal-pair co-retrieval "
+        "bounds any claim that generic clean evidence protects against poisoning. "
         f"Requiring commitment raised adoption from {mci['base_adoption']}/{mci['n_pairs']} to "
         f"{mci['new_adoption']}/{mci['n_pairs']} for Mistral "
         f"({fmt(mci['commit_adoption_pct'])}\\%; item-cluster 95\\% CI "
@@ -395,7 +397,10 @@ def write_tex(summary: dict) -> None:
         f"Pooled clean-control CRR was {fmt(mci['commit_clean_crr_pct'])}\\% (Mistral), "
         f"{fmt(lci['commit_clean_crr_pct'])}\\% (Luna), and {fmt(gci['commit_clean_crr_pct'])}\\% (Gemini, exploratory). "
         "For the locked models the comparator is the historical B2 run under unpinned provider routing; "
-        "Gemini used a contemporaneous matched baseline."
+        "Gemini used a contemporaneous matched baseline. "
+        "Table~\\ref{tab:commit-transitions} shows that forcing Mistral to commit split base "
+        "non-commitments almost evenly between attacker and correct values (22 vs.~23), whereas Luna "
+        "shifted more to correct than attacker values (26 vs.~6), with 12 N$\\to$N transitions."
     )
 
     mconv = mci["conversions"]
@@ -437,8 +442,8 @@ def write_tex(summary: dict) -> None:
         f"B2 providers were {'/'.join(mp['base_providers'])} (Mistral), "
         f"{'/'.join(qp['base_providers'])} (Qwen), and {'/'.join(lp['base_providers'])} (Luna); "
         f"commit providers were {'/'.join(mp['commit_providers'])} and {'/'.join(lp['commit_providers'])}. "
-        f"Closed-book Tier~1 correct counts were {mp['b0_by_tier']['1']['correct']}/70, "
-        f"{qp['b0_by_tier']['1']['correct']}/70, and {lp['b0_by_tier']['1']['correct']}/70; Luna had "
+        f"Closed-book Tier~1 correct counts were Mistral {mp['b0_by_tier']['1']['correct']}/70, "
+        f"Qwen {qp['b0_by_tier']['1']['correct']}/70, and Luna {lp['b0_by_tier']['1']['correct']}/70; Luna had "
         f"{lp['b0_by_tier']['1']['empty']}/70 empties."
     )
 
@@ -513,7 +518,7 @@ def write_tex(summary: dict) -> None:
         else None
     )
     consequence = (
-        "A post-hoc benchmark-consequence mapping decomposed each OSHA MAD into its electrical "
+        "Each OSHA MAD was decomposed into its electrical "
         "component and ergonomic component. "
         f"Of the {mad['n']} MAD poisons, {mad['movement_allowance_consumed']} consumed only part of the "
         f"ergonomic component, leaving {mad['remaining_beyond_electrical_min_m']:.2f}--"
@@ -539,7 +544,7 @@ def write_tex(summary: dict) -> None:
     adopted_inside = sorted(adopted_k2_items & inside_ids)
     if adopted_inside:
         consequence += (
-            f" {len(adopted_inside)} of these electrical-component cases "
+            f" Among the cases numerically below the electrical component, {len(adopted_inside)} "
             f"({', '.join(adopted_inside)}) were among the nine $k=2$ adopted trials."
         )
     consequence += (

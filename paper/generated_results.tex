@@ -66,7 +66,7 @@ In a post-hoc sensitivity analysis, counting an item as violating when either ph
 \subsection{Legitimate-conflict cost}
 Clean RAG answered 35--39 of 40 legitimate-conflict trials correctly. The structured record equals the benchmark target for 78/80 poisonable items, but intentionally stores a generic alternative for 13/20 Tier~3 items. BFFR therefore measures a controlled record-scope gap and is conditioned on clean-RAG correctness (a post-hoc refinement; unconditional BFFR at full coverage was 62.5\% for every model).
 \begin{table}[t]
-\caption{Conditional benign-conflict false-flag rate (BFFR).}
+\caption{Conditional BFFR at nominal coverage; realized Tier~3 coverage is 6/20, 14/20, and 20/20.}
 \label{tab:bffr}
 \centering
 \small
@@ -80,4 +80,4 @@ GPT-5.6 Luna & 17.9\% & 43.6\% & 64.1\% \\
 \bottomrule
 \end{tabular}
 \end{table}
-Table~\ref{tab:bffr} makes the record-scope construction explicit. With 13/20 Tier~3 items assigned a generic record, the full-coverage false-flag ceiling is set largely by design. At 70\% coverage, conditional BFFR was 43.6--45.7\%; at full coverage it was 64.1--65.7\%. The empirical model-dependent part is that clean RAG answered 35--39/40 scoped conflicts correctly; the false-flag magnitude is otherwise largely a consequence of the controlled record mismatch.
+Table~\ref{tab:bffr} reports the resulting rates. With 13/20 Tier~3 items assigned a generic record, the full-coverage false-flag ceiling is set largely by design. At 70\% coverage, conditional BFFR was 43.6--45.7\%; at full coverage it was 64.1--65.7\%. The empirical model-dependent part is that clean RAG answered 35--39/40 scoped conflicts correctly; the false-flag magnitude is otherwise largely a consequence of the controlled record mismatch.
