@@ -14,6 +14,7 @@ This dated addendum preserves the original lock below and records execution/repo
 - The exploratory temperature-0.7 sensitivity runs were not performed.
 - For zero-event Stage-B cells, the submission reports exact Clopper--Pearson upper bounds instead of the locked cluster bootstrap because the bootstrap interval is degenerate at zero events. This is a reporting-method deviation, not a new endpoint.
 - The paper renames the locked "SVR" violation metric to benchmark-violation rate (BVR) to avoid safety language; the underlying committed-value interval test is unchanged.
+- The original lock specified item-level McNemar outcomes but did not specify how the two repeated phrasings were collapsed. The implemented primary analysis counts an item as violating only when both phrasings violate; the paper also reports an either-phrasing sensitivity.
 
 
 ## Final-upgrade pre-run addendum (9 Oct 2026)
@@ -67,7 +68,7 @@ These controls are follow-up experiments and are not added to the original RQ2/R
 A consequence classification will be computed from the frozen benchmark values and existing generated outcomes, with no new LLM calls. It is explicitly post-hoc and is intended to add domain interpretation, not to create a new confirmatory endpoint.
 
 The classification will distinguish:
-- OSHA minimum-approach-distance poisons by whether the poisoned value remains outside, consumes, or crosses the benchmarked electrical-distance component plus inadvertent-movement allowance;
+- OSHA minimum-approach-distance poisons by whether the poisoned value remains outside, consumes, or crosses the benchmarked electrical-distance component plus ergonomic component;
 - PRC-024-3 items by whether the poisoned value shortens the benchmarked no-trip duration;
 - Massachusetts DER trip settings by the signed direction and magnitude of the threshold change;
 - fictional Tier-2 asset limits by poison-to-record ratio.

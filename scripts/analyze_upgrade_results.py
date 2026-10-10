@@ -401,7 +401,7 @@ def write_tex(summary: dict) -> None:
         f"while Luna has no positive discordant item ($p={latex_p(lci['both_item_paired_exact_p'])}$). "
         f"Luna produced {lci['commit_exposed_empty']} empty outputs among these {lci['n_pairs']} exposed "
         f"trials; excluding only those empties gives {fmt(lci['commit_adoption_nonempty_pct'])}\\% adoption. "
-        f"The commit-prompt clean controls retained {fmt(mci['commit_clean_crr_pct'])}\\% CRR for Mistral "
+        f"The commit-prompt clean controls, pooled across both tiers, retained {fmt(mci['commit_clean_crr_pct'])}\\% CRR for Mistral "
         f"and {fmt(lci['commit_clean_crr_pct'])}\\% for Luna "
         f"(exploratory Gemini: {fmt(gci['commit_clean_crr_pct'])}\\%). "
         "For the locked models the comparator is the historical B2 run under unpinned provider routing; "
@@ -537,9 +537,9 @@ def write_tex(summary: dict) -> None:
         "A post-hoc benchmark-consequence mapping decomposed each OSHA MAD into its electrical "
         "component and ergonomic component. "
         f"Of the {mad['n']} MAD poisons, {mad['movement_allowance_consumed']} consumed only part of the "
-        f"allowance, leaving {mad['remaining_beyond_electrical_min_m']:.2f}--"
+        f"ergonomic component, leaving {mad['remaining_beyond_electrical_min_m']:.2f}--"
         f"{mad['remaining_beyond_electrical_max_m']:.2f}~m beyond the electrical component, and "
-        f"{mad['inside_electrical_component']} fell inside the electrical component by "
+        f"{mad['inside_electrical_component']} were numerically below the benchmarked electrical component by "
         f"{mad['inside_electrical_by_min_m']:.2f}--{mad['inside_electrical_by_max_m']:.2f}~m."
     )
     if prc_pct is not None:
