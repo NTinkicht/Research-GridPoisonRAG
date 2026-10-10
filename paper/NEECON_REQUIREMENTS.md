@@ -17,7 +17,7 @@ https://neecon.org/author-resources/
 
 NEECON explicitly requires use of generative AI tools to be **disclosed in the manuscript**. Authors remain responsible for accuracy, originality and integrity; AI tools cannot be authors.
 
-This repository therefore includes an AI-use disclosure in `paper/main.tex`. Do not remove it.
+**Current manuscript status:** `paper/main.tex` does **not** contain a generative-AI-use disclosure. This is an unresolved venue-compliance conflict with the owner's manuscript constraints, not a completed requirement. Do not claim disclosure compliance or silently insert disclosure text. See `reviews/NEECON_2026_COMPLIANCE_GATE.md` for the submission gate.
 
 ## Camera-ready / PDF eXpress
 
