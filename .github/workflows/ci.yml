@@ -22,5 +22,21 @@ jobs:
           python scripts/analyze_upgrade_results.py
       - name: Verify generated paper assets are current
         run: git diff --exit-code -- paper/ results/upgrade_analysis.json
+      - name: Enforce manuscript source constraints
+        run: |
+          python - <<'PY'
+          from pathlib import Path
+          files = [Path("paper/main.tex"), Path("paper/generated_results.tex"), Path("paper/upgrade_followup.tex")]
+          text = "\n".join(p.read_text(encoding="utf-8") for p in files)
+          checks = {
+              "Unicode em dash": "—" in text,
+              "standalone Limitations section": "\\\\section{Limitations}" in text,
+              "Generative AI Use Disclosure": "Generative AI Use Disclosure" in text,
+          }
+          bad = [name for name, hit in checks.items() if hit]
+          if bad:
+              raise SystemExit("Forbidden manuscript content: " + ", ".join(bad))
+          print("Manuscript source constraints: PASS")
+          PY
       - run: python -m compileall -q scripts src
       - run: pytest -q

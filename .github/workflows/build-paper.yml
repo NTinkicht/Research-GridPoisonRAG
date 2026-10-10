@@ -39,6 +39,16 @@ jobs:
         with:
           root_file: main.tex
           working_directory: paper
+      - name: Enforce six-page submission limit
+        run: |
+          python -m pip install --quiet pypdf
+          python - <<'PY'
+          from pypdf import PdfReader
+          pages = len(PdfReader("paper/main.pdf").pages)
+          print(f"Submission PDF pages: {pages}")
+          if pages > 6:
+              raise SystemExit(f"Paper exceeds six-page limit: {pages} pages")
+          PY
       - name: Copy named PDF
         run: cp paper/main.pdf paper/GridPoisonRAG_NEECON2026.pdf
       - name: Package Overleaf project
