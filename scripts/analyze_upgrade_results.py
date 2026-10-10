@@ -338,7 +338,7 @@ def write_tex(summary: dict) -> None:
     le = empty["openai_gpt-5.6-luna"]
     lines.append(
         "An empty-output audit found none in Mistral or Qwen B2\\_P1 or either Stage-B position. "
-        f"Luna had {le['B2_P1']['empty']}/{le['B2_P1']['n']} empties in B2_P1, "
+        f"Luna had {le['B2_P1']['empty']}/{le['B2_P1']['n']} empties in B2\\_P1, "
         f"{le['STAGE_B_FIRST']['empty']}/{le['STAGE_B_FIRST']['n']} with poison first and "
         f"{le['STAGE_B_LAST']['empty']}/{le['STAGE_B_LAST']['n']} with poison last. "
         f"In Luna Stage C, C2 and C3 each had {le['STAGE_C']['C2']['empty']}/80 empties and "
