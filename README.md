@@ -1,13 +1,13 @@
 # Research-GridPoisonRAG
 
-**Paper:** *Does the Assistant Check the Record? Knowledge-Base Poisoning and System-of-Record Validation in Utility Operations RAG*
+**Paper:** *Silent Adoption or Non-Commitment? Knowledge-Base Poisoning and Record-Scope Costs in Utility-Operations RAG*
 
 GridPoisonRAG studies **answer integrity** in retrieval-augmented assistants used for utility-operations lookups. The threat is a low-trust writer who can add a small number of falsified documents to an indexed repository but cannot alter the authoritative system of record.
 
 ## Research questions
 
 - **RQ1 — Exposure vs adoption:** How does targeted knowledge-base poisoning split into retrieval exposure and conditional adoption?
-- **RQ2 — Parametric-prior split:** Does model prior knowledge protect public-standard facts more than asset-specific operational facts?
+- **RQ2 — Fixed-exposure comparison:** Does attacker-value adoption differ between public-standard and asset-specific facts when the same five-passage composition is supplied? The locked primary result was null (zero adoption in both tiers), so the comparison is inconclusive.
 - **RQ3 — Record validation:** How much does system-of-record validation reduce out-of-range answers relative to prompt-level and isolate-then-aggregate defenses, and what false-flag cost does it introduce on legitimate conflicts?
 
 ## Benchmark design
@@ -28,8 +28,9 @@ Each generation trial receives exactly one label:
 - **C**: correct committed value
 - **A**: attacker value adopted
 - **W**: other wrong committed value
-- **F**: conflict correctly flagged without adopting the poison
-- **R**: refusal / no committed value
+- **N**: non-commitment (all non-numeric outputs, including conflict flags, refusals, and empty responses)
+
+Earlier planning artifacts distinguished **F** (conflict flag) and **R** (refusal), but the submission paper explicitly combines these outcomes as **N**, because reliable conflict/refusal adjudication was not completed.
 
 The evaluation separates:
 
@@ -46,7 +47,7 @@ The evaluation separates:
 - **D2** isolate-then-aggregate evidence voting
 - **D3** deterministic system-of-record validation
 
-D3 is evaluated as an upper-bound keyed record check under imperfect coverage; query-to-record linking is outside scope.
+D3 is an **accounting upper bound**, not a deployable record-resolution algorithm: it post-processes already-generated answers with the correct item key supplied. Query-to-record linking, selection of the applicable jurisdiction/scope, and operational deployment are outside scope. Generic records intentionally create benign-conflict false flags.
 
 ## Reproducibility rules
 
@@ -60,7 +61,7 @@ D3 is evaluated as an upper-bound keyed record check under imperfect coverage; q
 
 ## Status
 
-The three-model experiment matrix is complete. The submission-facing analysis reports the pre-specified RQ3 comparison, natural-retrieval correctness/adoption outcomes, exact bounds for zero-event Stage-B cells, and the system-of-record scope assumptions. Tier 1 and Tier 3 public values are source-grounded; Tier 2 is fictional by construction. Historical planning gates remain in the repository for provenance but are not scientific submission requirements.
+The manuscript corresponding to this repository is *Silent Adoption or Non-Commitment?* (six-page conference version). Its pre-specified primary tests were both null: RQ2 reached an adoption floor under paired-twin fixed evidence; the D3@70 comparisons were not statistically significant under sparse discordance. The three-model experiment matrix is complete. The submission-facing analysis reports the pre-specified RQ3 comparison, natural-retrieval correctness/adoption outcomes, exact bounds for zero-event Stage-B cells, and the system-of-record scope assumptions. Tier 1 and Tier 3 public values are source-grounded; Tier 2 is fictional by construction. Historical planning gates remain in the repository for provenance but are not scientific submission requirements.
 
 
 ## Quick start
@@ -97,3 +98,7 @@ The complete execution sequence is in [RUNBOOK.md](RUNBOOK.md).
 - `scripts/` — validation, freezing, retrieval/generation runs, D3, analysis and adjudication tooling.
 - `paper/` — IEEE manuscript and generated results, related-work positioning, methods lock and adjudication rubric.
 - `.github/workflows/` — CI, retrieval-only Stage A, and manually triggered generation matrix.
+
+## Code availability and manuscript correspondence
+
+This public repository contains the benchmark, corpus, executable experimental pipeline, analysis scripts, and recorded results behind the conference paper. The paper reports non-commitment as `N`; historical project notes may retain the older `F`/`R` distinction. The reference manuscript is the six-page conference version titled above. Experimental inputs and interpretation should be read alongside `paper/methods_lock.md` and the dated follow-up notes. The code is available for inspection and reproduction; generating new hosted-model responses may require separately configured API access and may not reproduce the original providers exactly.
